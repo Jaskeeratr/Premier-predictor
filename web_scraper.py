@@ -1,62 +1,43 @@
-import time
-import requests
-from bs4 import BeautifulSoup
+from __future__ import annotations
+
 from io import StringIO
+
 import pandas as pd
+import requests
 
-years = list(range(2025, 2020, -1))  # This will loop over 2025 and 2024
-all_matches = []
-standings_url = "https://fbref.com/en/comps/9/Premier-League-Stats"
+SEASON_URLS = {
+    "2024-25": "https://www.football-data.co.uk/mmz4281/2425/E0.csv",
+    "2025-26": "https://www.football-data.co.uk/mmz4281/2526/E0.csv",
+}
 
-for year in years:
-    data = requests.get(standings_url)
-    soup = BeautifulSoup(data.text, features="html.parser")
-    standings_table = soup.select('table.stats_table')[0]
-    links = [l.get("href") for l in standings_table.find_all('a')]
-    links = [l for l in links if '/squads/' in l]
-    team_urls = [f"https://fbref.com{l}" for l in links]
 
-    previous_season = soup.select("a.prev")[0].get("href")
-    standings_url = f"https://fbref.com{previous_season}"
+def load_season_csv(season: str, url: str) -> pd.DataFrame:
+    response = requests.get(url, timeout=30)
+    response.raise_for_status()
+    df = pd.read_csv(StringIO(response.text))
+    df["Season"] = season
+    return df
 
-    for team_url in team_urls:
-        team_name = team_url.split("/")[-1].replace("Stats", "").replace("-", "")
-        
-        data = requests.get(team_url)
-        matches = pd.read_html(StringIO(data.text), match="Scores & Fixtures")
-        
-        soup_team = BeautifulSoup(data.text, features="lxml")  # Using lxml explicitly
-        team_links = [l.get("href") for l in soup_team.find_all('a')]
-        team_links = [l for l in team_links if l and 'all_comps/shooting' in l]
-        
+
+def main() -> None:
+    collected: list[pd.DataFrame] = []
+
+    for season, url in SEASON_URLS.items():
         try:
-            shooting_data = requests.get(f"https://fbref.com{team_links[0]}")
-            shooting = pd.read_html(StringIO(shooting_data.text), match="Shooting")[0]
-            shooting.columns = shooting.columns.droplevel()
-        except (ValueError, IndexError):
-            print(f"No 'Shooting' table found for {team_name} in {year}. Skipping...")
-            continue  # Skip to the next team
-        
-        try:
-            team_data = matches[0].merge(shooting[["Date", "Sh", "SoT", "Dist", "FK", "PK", "PKatt"]], on="Date")
-        except ValueError:
-            continue
-        
-        team_data = team_data[team_data["Comp"] == "Premier League"]
-        team_data["Season"] = year
-        team_data["Team"] = team_name
-        all_matches.append(team_data)
-        
-        time.sleep(5)
+            season_df = load_season_csv(season, url)
+            collected.append(season_df)
+            print(f"Loaded {season}: {len(season_df)} rows")
+        except requests.RequestException as exc:
+            print(f"Failed to download {season}: {exc}")
 
-# Combine all the DataFrames and save to CSV
-if all_matches:
-    all_matches_df = pd.concat(all_matches, ignore_index=True)
-    all_matches_df.to_csv("premier_league_matches.csv", index=False)
-    print("Data saved to premier_league_matches.csv")
-else:
-    print("No match data scraped.")
+    if not collected:
+        print("No data downloaded.")
+        return
+
+    combined = pd.concat(collected, ignore_index=True)
+    combined.to_csv("premier_league_latest_results.csv", index=False)
+    print("Saved latest EPL data to premier_league_latest_results.csv")
 
 
-
-
+if __name__ == "__main__":
+    main()

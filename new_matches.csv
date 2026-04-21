@@ -1,0 +1,51 @@
+Date,Time,HomeTeam,AwayTeam,PredictedResult,PredictedWinner,HomeWinProb,DrawProb,AwayWinProb,Confidence,ModelDecisionThreshold
+2026-04-24,20:00,Sunderland,Nottingham Forest,H,Sunderland,0.4721,0.1747,0.3532,0.4721,0.55
+2026-04-25,12:30,Fulham,Aston Villa,A,Aston Villa,0.3627,0.1714,0.4659,0.4659,0.55
+2026-04-25,15:00,Bournemouth,Leeds United,A,Leeds United,0.4257,0.1445,0.4298,0.4298,0.55
+2026-04-25,15:00,Liverpool,Crystal Palace,H,Liverpool,0.6291,0.1775,0.1934,0.6291,0.55
+2026-04-25,15:00,West Ham United,Everton,A,Everton,0.3343,0.1539,0.5118,0.5118,0.55
+2026-04-25,15:00,Wolverhampton Wanderers,Tottenham Hotspur,H,Wolverhampton Wanderers,0.4349,0.136,0.4291,0.4349,0.55
+2026-04-25,17:30,Arsenal,Newcastle United,H,Arsenal,0.5763,0.1509,0.2728,0.5763,0.55
+2026-04-26,14:00,Burnley,Manchester City,A,Manchester City,0.1316,0.1656,0.7028,0.7028,0.55
+2026-04-26,16:30,Brighton and Hove Albion,Chelsea,A,Chelsea,0.281,0.1662,0.5528,0.5528,0.55
+2026-04-27,20:00,Manchester United,Brentford,H,Manchester United,0.4369,0.1447,0.4184,0.4369,0.55
+2026-05-02,15:00,Arsenal,Fulham,H,Arsenal,0.6509,0.1675,0.1817,0.6509,0.55
+2026-05-02,15:00,Aston Villa,Tottenham Hotspur,H,Aston Villa,0.4823,0.1391,0.3787,0.4823,0.55
+2026-05-02,15:00,Bournemouth,Crystal Palace,A,Crystal Palace,0.3515,0.1617,0.4867,0.4867,0.55
+2026-05-02,15:00,Brentford,West Ham United,H,Brentford,0.5541,0.1557,0.2901,0.5541,0.55
+2026-05-02,15:00,Chelsea,Nottingham Forest,H,Chelsea,0.6118,0.1738,0.2144,0.6118,0.55
+2026-05-02,15:00,Everton,Manchester City,A,Manchester City,0.2725,0.1563,0.5712,0.5712,0.55
+2026-05-02,15:00,Leeds United,Burnley,H,Leeds United,0.5331,0.1536,0.3133,0.5331,0.55
+2026-05-02,15:00,Manchester United,Liverpool,A,Liverpool,0.3041,0.1506,0.5453,0.5453,0.55
+2026-05-02,15:00,Newcastle United,Brighton and Hove Albion,H,Newcastle United,0.5044,0.1593,0.3364,0.5044,0.55
+2026-05-02,15:00,Wolverhampton Wanderers,Sunderland,H,Wolverhampton Wanderers,0.4186,0.167,0.4144,0.4186,0.55
+2026-05-09,15:00,Brighton and Hove Albion,Wolverhampton Wanderers,H,Brighton and Hove Albion,0.4574,0.1616,0.381,0.4574,0.55
+2026-05-09,15:00,Burnley,Aston Villa,A,Aston Villa,0.3218,0.1598,0.5184,0.5184,0.55
+2026-05-09,15:00,Crystal Palace,Everton,A,Everton,0.3982,0.1723,0.4295,0.4295,0.55
+2026-05-09,15:00,Fulham,Bournemouth,H,Fulham,0.4494,0.1587,0.392,0.4494,0.55
+2026-05-09,15:00,Liverpool,Chelsea,H,Liverpool,0.5469,0.1695,0.2836,0.5469,0.55
+2026-05-09,15:00,Manchester City,Brentford,H,Manchester City,0.6301,0.1601,0.2099,0.6301,0.55
+2026-05-09,15:00,Nottingham Forest,Newcastle United,A,Newcastle United,0.3979,0.1611,0.441,0.441,0.55
+2026-05-09,15:00,Sunderland,Manchester United,A,Manchester United,0.3913,0.1515,0.4573,0.4573,0.55
+2026-05-09,15:00,Tottenham Hotspur,Leeds United,H,Tottenham Hotspur,0.46,0.1333,0.4067,0.46,0.55
+2026-05-09,15:00,West Ham United,Arsenal,A,Arsenal,0.2761,0.1512,0.5727,0.5727,0.55
+2026-05-17,15:00,Arsenal,Burnley,H,Arsenal,0.6758,0.1642,0.16,0.6758,0.55
+2026-05-17,15:00,Aston Villa,Liverpool,A,Liverpool,0.249,0.1655,0.5855,0.5855,0.55
+2026-05-17,15:00,Bournemouth,Manchester City,A,Manchester City,0.1831,0.1571,0.6597,0.6597,0.55
+2026-05-17,15:00,Brentford,Crystal Palace,H,Brentford,0.4826,0.1699,0.3474,0.4826,0.55
+2026-05-17,15:00,Chelsea,Tottenham Hotspur,H,Chelsea,0.5638,0.1449,0.2912,0.5638,0.55
+2026-05-17,15:00,Everton,Sunderland,H,Everton,0.5553,0.173,0.2717,0.5553,0.55
+2026-05-17,15:00,Leeds United,Brighton and Hove Albion,H,Leeds United,0.4666,0.1549,0.3785,0.4666,0.55
+2026-05-17,15:00,Manchester United,Nottingham Forest,H,Manchester United,0.5297,0.1503,0.32,0.5297,0.55
+2026-05-17,15:00,Newcastle United,West Ham United,H,Newcastle United,0.5007,0.1442,0.3551,0.5007,0.55
+2026-05-17,15:00,Wolverhampton Wanderers,Fulham,H,Wolverhampton Wanderers,0.4668,0.1604,0.3728,0.4668,0.55
+2026-05-24,16:00,Brighton and Hove Albion,Manchester United,A,Manchester United,0.3784,0.1445,0.4771,0.4771,0.55
+2026-05-24,16:00,Burnley,Wolverhampton Wanderers,A,Wolverhampton Wanderers,0.3894,0.1521,0.4586,0.4586,0.55
+2026-05-24,16:00,Crystal Palace,Arsenal,A,Arsenal,0.3271,0.1604,0.5124,0.5124,0.55
+2026-05-24,16:00,Fulham,Newcastle United,A,Newcastle United,0.3798,0.1553,0.4649,0.4649,0.55
+2026-05-24,16:00,Liverpool,Brentford,H,Liverpool,0.5946,0.167,0.2384,0.5946,0.55
+2026-05-24,16:00,Manchester City,Aston Villa,H,Manchester City,0.6575,0.1589,0.1836,0.6575,0.55
+2026-05-24,16:00,Nottingham Forest,Bournemouth,H,Nottingham Forest,0.4721,0.1572,0.3707,0.4721,0.55
+2026-05-24,16:00,Sunderland,Chelsea,A,Chelsea,0.2958,0.1707,0.5335,0.5335,0.55
+2026-05-24,16:00,Tottenham Hotspur,Everton,A,Everton,0.3755,0.1387,0.4858,0.4858,0.55
+2026-05-24,16:00,West Ham United,Leeds United,H,West Ham United,0.4412,0.1402,0.4187,0.4412,0.55
