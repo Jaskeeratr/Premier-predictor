@@ -1,0 +1,411 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Match Predictions</title>
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      margin: 24px;
+      background: #f8fafc;
+      color: #0f172a;
+    }
+    h1 {
+      margin: 0 0 6px 0;
+    }
+    p {
+      margin: 0 0 16px 0;
+      color: #334155;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background: #ffffff;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    th {
+      background: #0f172a;
+      color: #ffffff;
+      font-weight: 600;
+    }
+    tr:hover td {
+      background: #f1f5f9;
+    }
+  </style>
+</head>
+<body>
+  <h1>Premier League Predictions</h1>
+  <p>Simple view: game, predicted winner, and confidence.</p>
+  <table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>Date</th>
+      <th>Time</th>
+      <th>Game</th>
+      <th>Predicted Winner</th>
+      <th>Confidence</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>2026-04-24</td>
+      <td>20:00</td>
+      <td>Sunderland vs Nottingham Forest</td>
+      <td>Sunderland</td>
+      <td>47.2%</td>
+    </tr>
+    <tr>
+      <td>2026-04-25</td>
+      <td>12:30</td>
+      <td>Fulham vs Aston Villa</td>
+      <td>Aston Villa</td>
+      <td>46.6%</td>
+    </tr>
+    <tr>
+      <td>2026-04-25</td>
+      <td>15:00</td>
+      <td>Bournemouth vs Leeds United</td>
+      <td>Leeds United</td>
+      <td>43.0%</td>
+    </tr>
+    <tr>
+      <td>2026-04-25</td>
+      <td>15:00</td>
+      <td>Liverpool vs Crystal Palace</td>
+      <td>Liverpool</td>
+      <td>62.9%</td>
+    </tr>
+    <tr>
+      <td>2026-04-25</td>
+      <td>15:00</td>
+      <td>West Ham United vs Everton</td>
+      <td>Everton</td>
+      <td>51.2%</td>
+    </tr>
+    <tr>
+      <td>2026-04-25</td>
+      <td>15:00</td>
+      <td>Wolverhampton Wanderers vs Tottenham Hotspur</td>
+      <td>Wolverhampton Wanderers</td>
+      <td>43.5%</td>
+    </tr>
+    <tr>
+      <td>2026-04-25</td>
+      <td>17:30</td>
+      <td>Arsenal vs Newcastle United</td>
+      <td>Arsenal</td>
+      <td>57.6%</td>
+    </tr>
+    <tr>
+      <td>2026-04-26</td>
+      <td>14:00</td>
+      <td>Burnley vs Manchester City</td>
+      <td>Manchester City</td>
+      <td>70.3%</td>
+    </tr>
+    <tr>
+      <td>2026-04-26</td>
+      <td>16:30</td>
+      <td>Brighton and Hove Albion vs Chelsea</td>
+      <td>Chelsea</td>
+      <td>55.3%</td>
+    </tr>
+    <tr>
+      <td>2026-04-27</td>
+      <td>20:00</td>
+      <td>Manchester United vs Brentford</td>
+      <td>Manchester United</td>
+      <td>43.7%</td>
+    </tr>
+    <tr>
+      <td>2026-05-02</td>
+      <td>15:00</td>
+      <td>Arsenal vs Fulham</td>
+      <td>Arsenal</td>
+      <td>65.1%</td>
+    </tr>
+    <tr>
+      <td>2026-05-02</td>
+      <td>15:00</td>
+      <td>Aston Villa vs Tottenham Hotspur</td>
+      <td>Aston Villa</td>
+      <td>48.2%</td>
+    </tr>
+    <tr>
+      <td>2026-05-02</td>
+      <td>15:00</td>
+      <td>Bournemouth vs Crystal Palace</td>
+      <td>Crystal Palace</td>
+      <td>48.7%</td>
+    </tr>
+    <tr>
+      <td>2026-05-02</td>
+      <td>15:00</td>
+      <td>Brentford vs West Ham United</td>
+      <td>Brentford</td>
+      <td>55.4%</td>
+    </tr>
+    <tr>
+      <td>2026-05-02</td>
+      <td>15:00</td>
+      <td>Chelsea vs Nottingham Forest</td>
+      <td>Chelsea</td>
+      <td>61.2%</td>
+    </tr>
+    <tr>
+      <td>2026-05-02</td>
+      <td>15:00</td>
+      <td>Everton vs Manchester City</td>
+      <td>Manchester City</td>
+      <td>57.1%</td>
+    </tr>
+    <tr>
+      <td>2026-05-02</td>
+      <td>15:00</td>
+      <td>Leeds United vs Burnley</td>
+      <td>Leeds United</td>
+      <td>53.3%</td>
+    </tr>
+    <tr>
+      <td>2026-05-02</td>
+      <td>15:00</td>
+      <td>Manchester United vs Liverpool</td>
+      <td>Liverpool</td>
+      <td>54.5%</td>
+    </tr>
+    <tr>
+      <td>2026-05-02</td>
+      <td>15:00</td>
+      <td>Newcastle United vs Brighton and Hove Albion</td>
+      <td>Newcastle United</td>
+      <td>50.4%</td>
+    </tr>
+    <tr>
+      <td>2026-05-02</td>
+      <td>15:00</td>
+      <td>Wolverhampton Wanderers vs Sunderland</td>
+      <td>Wolverhampton Wanderers</td>
+      <td>41.9%</td>
+    </tr>
+    <tr>
+      <td>2026-05-09</td>
+      <td>15:00</td>
+      <td>Brighton and Hove Albion vs Wolverhampton Wanderers</td>
+      <td>Brighton and Hove Albion</td>
+      <td>45.7%</td>
+    </tr>
+    <tr>
+      <td>2026-05-09</td>
+      <td>15:00</td>
+      <td>Burnley vs Aston Villa</td>
+      <td>Aston Villa</td>
+      <td>51.8%</td>
+    </tr>
+    <tr>
+      <td>2026-05-09</td>
+      <td>15:00</td>
+      <td>Crystal Palace vs Everton</td>
+      <td>Everton</td>
+      <td>43.0%</td>
+    </tr>
+    <tr>
+      <td>2026-05-09</td>
+      <td>15:00</td>
+      <td>Fulham vs Bournemouth</td>
+      <td>Fulham</td>
+      <td>44.9%</td>
+    </tr>
+    <tr>
+      <td>2026-05-09</td>
+      <td>15:00</td>
+      <td>Liverpool vs Chelsea</td>
+      <td>Liverpool</td>
+      <td>54.7%</td>
+    </tr>
+    <tr>
+      <td>2026-05-09</td>
+      <td>15:00</td>
+      <td>Manchester City vs Brentford</td>
+      <td>Manchester City</td>
+      <td>63.0%</td>
+    </tr>
+    <tr>
+      <td>2026-05-09</td>
+      <td>15:00</td>
+      <td>Nottingham Forest vs Newcastle United</td>
+      <td>Newcastle United</td>
+      <td>44.1%</td>
+    </tr>
+    <tr>
+      <td>2026-05-09</td>
+      <td>15:00</td>
+      <td>Sunderland vs Manchester United</td>
+      <td>Manchester United</td>
+      <td>45.7%</td>
+    </tr>
+    <tr>
+      <td>2026-05-09</td>
+      <td>15:00</td>
+      <td>Tottenham Hotspur vs Leeds United</td>
+      <td>Tottenham Hotspur</td>
+      <td>46.0%</td>
+    </tr>
+    <tr>
+      <td>2026-05-09</td>
+      <td>15:00</td>
+      <td>West Ham United vs Arsenal</td>
+      <td>Arsenal</td>
+      <td>57.3%</td>
+    </tr>
+    <tr>
+      <td>2026-05-17</td>
+      <td>15:00</td>
+      <td>Arsenal vs Burnley</td>
+      <td>Arsenal</td>
+      <td>67.6%</td>
+    </tr>
+    <tr>
+      <td>2026-05-17</td>
+      <td>15:00</td>
+      <td>Aston Villa vs Liverpool</td>
+      <td>Liverpool</td>
+      <td>58.6%</td>
+    </tr>
+    <tr>
+      <td>2026-05-17</td>
+      <td>15:00</td>
+      <td>Bournemouth vs Manchester City</td>
+      <td>Manchester City</td>
+      <td>66.0%</td>
+    </tr>
+    <tr>
+      <td>2026-05-17</td>
+      <td>15:00</td>
+      <td>Brentford vs Crystal Palace</td>
+      <td>Brentford</td>
+      <td>48.3%</td>
+    </tr>
+    <tr>
+      <td>2026-05-17</td>
+      <td>15:00</td>
+      <td>Chelsea vs Tottenham Hotspur</td>
+      <td>Chelsea</td>
+      <td>56.4%</td>
+    </tr>
+    <tr>
+      <td>2026-05-17</td>
+      <td>15:00</td>
+      <td>Everton vs Sunderland</td>
+      <td>Everton</td>
+      <td>55.5%</td>
+    </tr>
+    <tr>
+      <td>2026-05-17</td>
+      <td>15:00</td>
+      <td>Leeds United vs Brighton and Hove Albion</td>
+      <td>Leeds United</td>
+      <td>46.7%</td>
+    </tr>
+    <tr>
+      <td>2026-05-17</td>
+      <td>15:00</td>
+      <td>Manchester United vs Nottingham Forest</td>
+      <td>Manchester United</td>
+      <td>53.0%</td>
+    </tr>
+    <tr>
+      <td>2026-05-17</td>
+      <td>15:00</td>
+      <td>Newcastle United vs West Ham United</td>
+      <td>Newcastle United</td>
+      <td>50.1%</td>
+    </tr>
+    <tr>
+      <td>2026-05-17</td>
+      <td>15:00</td>
+      <td>Wolverhampton Wanderers vs Fulham</td>
+      <td>Wolverhampton Wanderers</td>
+      <td>46.7%</td>
+    </tr>
+    <tr>
+      <td>2026-05-24</td>
+      <td>16:00</td>
+      <td>Brighton and Hove Albion vs Manchester United</td>
+      <td>Manchester United</td>
+      <td>47.7%</td>
+    </tr>
+    <tr>
+      <td>2026-05-24</td>
+      <td>16:00</td>
+      <td>Burnley vs Wolverhampton Wanderers</td>
+      <td>Wolverhampton Wanderers</td>
+      <td>45.9%</td>
+    </tr>
+    <tr>
+      <td>2026-05-24</td>
+      <td>16:00</td>
+      <td>Crystal Palace vs Arsenal</td>
+      <td>Arsenal</td>
+      <td>51.2%</td>
+    </tr>
+    <tr>
+      <td>2026-05-24</td>
+      <td>16:00</td>
+      <td>Fulham vs Newcastle United</td>
+      <td>Newcastle United</td>
+      <td>46.5%</td>
+    </tr>
+    <tr>
+      <td>2026-05-24</td>
+      <td>16:00</td>
+      <td>Liverpool vs Brentford</td>
+      <td>Liverpool</td>
+      <td>59.5%</td>
+    </tr>
+    <tr>
+      <td>2026-05-24</td>
+      <td>16:00</td>
+      <td>Manchester City vs Aston Villa</td>
+      <td>Manchester City</td>
+      <td>65.8%</td>
+    </tr>
+    <tr>
+      <td>2026-05-24</td>
+      <td>16:00</td>
+      <td>Nottingham Forest vs Bournemouth</td>
+      <td>Nottingham Forest</td>
+      <td>47.2%</td>
+    </tr>
+    <tr>
+      <td>2026-05-24</td>
+      <td>16:00</td>
+      <td>Sunderland vs Chelsea</td>
+      <td>Chelsea</td>
+      <td>53.3%</td>
+    </tr>
+    <tr>
+      <td>2026-05-24</td>
+      <td>16:00</td>
+      <td>Tottenham Hotspur vs Everton</td>
+      <td>Everton</td>
+      <td>48.6%</td>
+    </tr>
+    <tr>
+      <td>2026-05-24</td>
+      <td>16:00</td>
+      <td>West Ham United vs Leeds United</td>
+      <td>West Ham United</td>
+      <td>44.1%</td>
+    </tr>
+  </tbody>
+</table>
+</body>
+</html>

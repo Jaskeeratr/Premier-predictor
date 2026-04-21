@@ -130,7 +130,76 @@ def build_improved_model() -> Pipeline:
     return Pipeline(steps=[("preprocess", preprocess), ("model", model)])
 
 
-def train_and_evaluate(matches: pd.DataFrame, split_date: str) -> tuple[Pipeline, float]:
+def _format_percent(value: float) -> str:
+    return f"{value * 100:.1f}%"
+
+
+def save_simple_prediction_report(predictions: pd.DataFrame, html_path: Path, csv_path: Path) -> None:
+    if predictions.empty:
+        return
+
+    report = predictions.copy()
+    report["Game"] = report["HomeTeam"] + " vs " + report["AwayTeam"]
+    report["Confidence"] = report["Confidence"].map(_format_percent)
+    report = report[["Date", "Time", "Game", "PredictedWinner", "Confidence"]].rename(
+        columns={"PredictedWinner": "Predicted Winner"}
+    )
+
+    report.to_csv(csv_path, index=False)
+
+    html = f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Match Predictions</title>
+  <style>
+    body {{
+      font-family: "Segoe UI", Tahoma, Arial, sans-serif;
+      margin: 24px;
+      background: #f8fafc;
+      color: #0f172a;
+    }}
+    h1 {{
+      margin: 0 0 6px 0;
+    }}
+    p {{
+      margin: 0 0 16px 0;
+      color: #334155;
+    }}
+    table {{
+      border-collapse: collapse;
+      width: 100%;
+      background: #ffffff;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.08);
+      border-radius: 10px;
+      overflow: hidden;
+    }}
+    th, td {{
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 1px solid #e2e8f0;
+    }}
+    th {{
+      background: #0f172a;
+      color: #ffffff;
+      font-weight: 600;
+    }}
+    tr:hover td {{
+      background: #f1f5f9;
+    }}
+  </style>
+</head>
+<body>
+  <h1>Premier League Predictions</h1>
+  <p>Simple view: game, predicted winner, and confidence.</p>
+  {report.to_html(index=False, escape=True)}
+</body>
+</html>"""
+    html_path.write_text(html, encoding="utf-8")
+
+
+def train_and_evaluate(matches: pd.DataFrame, split_date: str) -> tuple[Pipeline, float, pd.DataFrame]:
     cutoff = pd.Timestamp(split_date)
     train = matches[matches["Date"] < cutoff].copy()
     test = matches[matches["Date"] > cutoff].copy()
@@ -157,7 +226,19 @@ def train_and_evaluate(matches: pd.DataFrame, split_date: str) -> tuple[Pipeline
     print("Improved Precision (Logistic + Rolling Form):", round(improved_prec, 4))
     print("Chosen Decision Threshold:", decision_threshold)
 
-    return improved, decision_threshold
+    historical_predictions = test[["Date", "Team", "Opponent", "Result"]].copy()
+    historical_predictions["ActualWin"] = historical_predictions["Result"].eq("W").map({True: "Yes", False: "No"})
+    historical_predictions["PredWinProb"] = np.round(test_probs, 4)
+    historical_predictions["PredWin"] = (test_probs >= decision_threshold).astype(int)
+    historical_predictions["PredWin"] = historical_predictions["PredWin"].map({1: "Yes", 0: "No"})
+    historical_predictions["Date"] = historical_predictions["Date"].dt.strftime("%Y-%m-%d")
+    historical_predictions["Match"] = historical_predictions["Team"] + " vs " + historical_predictions["Opponent"]
+    historical_predictions["PredWinProb"] = historical_predictions["PredWinProb"].map(_format_percent)
+    historical_predictions = historical_predictions[
+        ["Date", "Match", "Result", "ActualWin", "PredWin", "PredWinProb"]
+    ].sort_values("Date", ascending=False)
+
+    return improved, decision_threshold, historical_predictions
 
 
 def _normalize_fixture_team_name(name: str) -> str:
@@ -263,16 +344,16 @@ def predict_upcoming_matches(
     threshold: float,
     as_of: pd.Timestamp,
     output_file: Path,
-) -> None:
+) -> pd.DataFrame:
     try:
         fixtures = fetch_upcoming_fixtures(as_of)
     except requests.RequestException as exc:
         print(f"Could not fetch upcoming fixtures: {exc}")
-        return
+        return pd.DataFrame()
 
     if fixtures.empty:
         print("No fixtures found on or after", as_of.date())
-        return
+        return pd.DataFrame()
 
     latest_snapshot, medians = _build_latest_team_snapshot(matches)
     draw_rate = float((matches["Result"] == "D").mean())
@@ -341,6 +422,7 @@ def predict_upcoming_matches(
     predictions = pd.DataFrame(prediction_rows)
     predictions.to_csv(output_file, index=False)
     print(f"Saved {len(predictions)} current/upcoming match predictions to {output_file}")
+    return predictions
 
 
 def parse_args() -> argparse.Namespace:
@@ -349,6 +431,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--split-date", default="2024-03-01", help="Train/test split date in YYYY-MM-DD format.")
     parser.add_argument("--as-of-date", default=date.today().isoformat(), help="Fixture prediction start date in YYYY-MM-DD format.")
     parser.add_argument("--output-csv", default="new_matches.csv", help="Output CSV path for current/upcoming predictions.")
+    parser.add_argument("--report-html", default="prediction_report.html", help="Simple HTML report output path.")
+    parser.add_argument("--report-csv", default="prediction_table.csv", help="Simple CSV table output path.")
     return parser.parse_args()
 
 
@@ -356,11 +440,18 @@ def main() -> None:
     args = parse_args()
     historical_path = Path(args.historical_csv)
     output_path = Path(args.output_csv)
+    html_report_path = Path(args.report_html)
+    csv_report_path = Path(args.report_csv)
     as_of = pd.Timestamp(args.as_of_date)
 
     matches = load_matches(historical_path)
-    model, threshold = train_and_evaluate(matches, split_date=args.split_date)
-    predict_upcoming_matches(matches, model, threshold, as_of=as_of, output_file=output_path)
+    model, threshold, _ = train_and_evaluate(matches, split_date=args.split_date)
+
+    new_predictions = predict_upcoming_matches(matches, model, threshold, as_of=as_of, output_file=output_path)
+    if not new_predictions.empty:
+        save_simple_prediction_report(new_predictions, html_path=html_report_path, csv_path=csv_report_path)
+        print(f"Saved simple table CSV to {csv_report_path}")
+        print(f"Saved simple HTML report to {html_report_path}")
 
 
 if __name__ == "__main__":
