@@ -20,6 +20,19 @@ const whatIfResult = document.getElementById("what-if-result");
 const whatIfSportSelect = document.getElementById("whatif-sport");
 const whatIfSection = document.getElementById("what-if-section");
 
+const injuryForm = document.getElementById("injury-form");
+const injurySportSelect = document.getElementById("injury-sport");
+const injuryTeamInput = document.getElementById("injury-team");
+const injuryRatingInput = document.getElementById("injury-rating");
+const injuryFormInput = document.getElementById("injury-form-delta");
+const injuryOffenseInput = document.getElementById("injury-offense");
+const injuryDefenseInput = document.getElementById("injury-defense");
+const injuryNotesInput = document.getElementById("injury-notes");
+const injuryBody = document.getElementById("injury-body");
+const injuryMeta = document.getElementById("injury-meta");
+const deleteInjuryBtn = document.getElementById("delete-injury-btn");
+const clearSportInjuriesBtn = document.getElementById("clear-sport-injuries-btn");
+
 let allUpcomingMatches = [];
 let autoRefreshHandle = null;
 
@@ -35,12 +48,34 @@ function asLocalTimestamp(utcValue) {
   return parsed.toLocaleString();
 }
 
+function asUtcTimestamp(utcValue) {
+  const parsed = new Date(utcValue);
+  if (Number.isNaN(parsed.getTime())) {
+    return utcValue || "";
+  }
+  return parsed.toISOString().replace("T", " ").replace("Z", "");
+}
+
+function readNumberFromElement(element, fallback = 0) {
+  const value = Number(element.value);
+  return Number.isFinite(value) ? value : fallback;
+}
+
+function readNumericInput(id, fallback) {
+  const value = Number(document.getElementById(id).value);
+  return Number.isFinite(value) ? value : fallback;
+}
+
 function setUpcomingMeta(text) {
   upcomingMeta.textContent = text;
 }
 
 function setHistoryMeta(text) {
   historyMeta.textContent = text;
+}
+
+function setInjuryMeta(text) {
+  injuryMeta.textContent = text;
 }
 
 function parsePredictedScore(score) {
@@ -77,6 +112,17 @@ function fillWhatIfFromMatch(match) {
   }
 
   document.getElementById("neutral-site").checked = false;
+  document.getElementById("ignore-injuries").checked = false;
+}
+
+function fillInjuryFormFromRow(row) {
+  injurySportSelect.value = row.sport;
+  injuryTeamInput.value = row.team || "";
+  injuryRatingInput.value = Number(row.rating_delta || 0);
+  injuryFormInput.value = Number(row.form_delta || 0);
+  injuryOffenseInput.value = Number(row.offense_delta || 0);
+  injuryDefenseInput.value = Number(row.defense_delta || 0);
+  injuryNotesInput.value = row.notes || "";
 }
 
 function updateLeagueFilterOptions(matches, sport) {
@@ -146,7 +192,7 @@ function renderUpcomingMatches() {
   buttons.forEach((button) => {
     button.addEventListener("click", () => {
       const eventId = button.getAttribute("data-event-id");
-      const selected = allUpcomingMatches.find((item) => item.event_id === eventId);
+      const selected = allUpcomingMatches.find((item) => String(item.event_id) === String(eventId));
       if (selected) {
         fillWhatIfFromMatch(selected);
         if (whatIfSection) {
@@ -180,6 +226,7 @@ async function loadUpcomingMatches({ force = false, silent = false } = {}) {
     const filteredCount = filterUpcomingMatches().length;
     const updatedAt = asLocalTimestamp(payload.updated_at_utc);
     const training = payload.training || {};
+    const injuryCount = Number(payload.injury_adjustments_count || 0);
     let trainingSummary = "Model: heuristic fallback";
     if (training.status === "ok") {
       trainingSummary = `Model: ${training.best_model} | Holdout Acc: ${(Number(training.holdout_accuracy || 0) * 100).toFixed(1)}% | Samples: ${training.sample_count}`;
@@ -187,11 +234,13 @@ async function loadUpcomingMatches({ force = false, silent = false } = {}) {
       trainingSummary = `Model status: ${training.status}`;
     }
     setUpcomingMeta(
-      `Showing ${filteredCount} of ${allUpcomingMatches.length} matches. Snapshot #${payload.snapshot_id ?? "-"} | Updated: ${updatedAt} | ${trainingSummary}`,
+      `Showing ${filteredCount} of ${allUpcomingMatches.length} matches. Snapshot #${payload.snapshot_id ?? "-"} | Updated: ${updatedAt} | ${trainingSummary} | Injury rules: ${injuryCount}`,
     );
     whatIfSportSelect.value = sport;
     historySport.value = sport;
+    injurySportSelect.value = sport;
     await loadHistory({ silent: true });
+    await loadInjuries({ silent: true });
   } catch (error) {
     setUpcomingMeta(error.message);
     upcomingBody.innerHTML = `<tr><td colspan="8">${error.message}</td></tr>`;
@@ -226,8 +275,8 @@ function renderHistory(rows) {
       const sportLabel = row.sport.replace("_", " ");
       return `
         <tr>
-          <td>${row.created_at_utc}</td>
-          <td>${row.kickoff_utc || ""}</td>
+          <td>${asUtcTimestamp(row.created_at_utc)}</td>
+          <td>${asUtcTimestamp(row.kickoff_utc)}</td>
           <td>${sportLabel}</td>
           <td>${row.league || ""}</td>
           <td>${row.home_team || ""} vs ${row.away_team || ""}</td>
@@ -294,23 +343,23 @@ async function clearHistory() {
 }
 
 function renderWhatIfResult(result) {
+  const confidence = Number(result.confidence || 0);
+  const interpretation =
+    confidence < 0.5
+      ? "Top pick in a close match (less certainty)"
+      : "Strongest projected outcome";
   whatIfResult.classList.remove("hidden");
   whatIfResult.innerHTML = `
     <h3>What-If Result</h3>
     <div class="result-row">
       <div><strong>Winner:</strong> ${result.predicted_winner}</div>
-      <div><strong>Confidence:</strong> ${pct(result.confidence)}</div>
+      <div><strong>Confidence:</strong> ${pct(confidence)} (${interpretation})</div>
       <div><strong>Rough Score:</strong> ${result.predicted_score}</div>
       <div><strong>Home Win:</strong> ${pct(result.home_win_probability)}</div>
       <div><strong>Draw:</strong> ${pct(result.draw_probability)}</div>
       <div><strong>Away Win:</strong> ${pct(result.away_win_probability)}</div>
     </div>
   `;
-}
-
-function readNumericInput(id, fallback) {
-  const value = Number(document.getElementById(id).value);
-  return Number.isFinite(value) ? value : fallback;
 }
 
 async function submitWhatIf(event) {
@@ -328,6 +377,7 @@ async function submitWhatIf(event) {
     home_avg_allowed: readNumericInput("home-allowed", 20),
     away_avg_allowed: readNumericInput("away-allowed", 20),
     neutral_site: document.getElementById("neutral-site").checked,
+    ignore_injuries: document.getElementById("ignore-injuries").checked,
   };
 
   try {
@@ -347,6 +397,150 @@ async function submitWhatIf(event) {
   }
 }
 
+function renderInjuries(rows) {
+  if (!rows.length) {
+    injuryBody.innerHTML = `<tr><td colspan="8">No injury adjustments saved.</td></tr>`;
+    return;
+  }
+
+  injuryBody.innerHTML = rows
+    .map(
+      (row) => `
+      <tr class="injury-row" data-sport="${row.sport}" data-team="${row.team}">
+        <td>${asUtcTimestamp(row.updated_at_utc)}</td>
+        <td>${row.sport}</td>
+        <td>${row.team}</td>
+        <td>${Number(row.rating_delta || 0).toFixed(1)}</td>
+        <td>${Number(row.form_delta || 0).toFixed(2)}</td>
+        <td>${Number(row.offense_delta || 0).toFixed(2)}</td>
+        <td>${Number(row.defense_delta || 0).toFixed(2)}</td>
+        <td>${row.notes || ""}</td>
+      </tr>
+    `,
+    )
+    .join("");
+
+  const rowsEls = injuryBody.querySelectorAll(".injury-row");
+  rowsEls.forEach((rowEl) => {
+    rowEl.addEventListener("click", () => {
+      const sport = rowEl.dataset.sport || "";
+      const team = rowEl.dataset.team || "";
+      const row = rows.find((item) => item.sport === sport && item.team === team);
+      if (row) {
+        fillInjuryFormFromRow(row);
+      }
+    });
+  });
+}
+
+async function loadInjuries({ silent = false } = {}) {
+  if (!silent) {
+    setInjuryMeta("Loading injury adjustments...");
+  }
+  const sport = injurySportSelect.value;
+
+  try {
+    const response = await fetch(`/api/injuries?sport=${encodeURIComponent(sport)}&limit=500`);
+    const payload = await response.json();
+    if (!response.ok) {
+      throw new Error(payload.error || "Failed to load injury adjustments.");
+    }
+    renderInjuries(payload.rows || []);
+    setInjuryMeta(`Loaded ${payload.count} injury adjustment rows for ${sport.replace("_", " ")}.`);
+  } catch (error) {
+    setInjuryMeta(error.message);
+    injuryBody.innerHTML = `<tr><td colspan="8">${error.message}</td></tr>`;
+  }
+}
+
+async function saveInjury(event) {
+  event.preventDefault();
+  const sport = injurySportSelect.value;
+  const team = injuryTeamInput.value.trim();
+  if (!team) {
+    setInjuryMeta("Team is required.");
+    return;
+  }
+
+  const payload = {
+    sport,
+    team,
+    rating_delta: readNumberFromElement(injuryRatingInput, 0),
+    form_delta: readNumberFromElement(injuryFormInput, 0),
+    offense_delta: readNumberFromElement(injuryOffenseInput, 0),
+    defense_delta: readNumberFromElement(injuryDefenseInput, 0),
+    notes: injuryNotesInput.value.trim(),
+  };
+
+  try {
+    const response = await fetch("/api/injuries", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || "Failed to save injury adjustment.");
+    }
+    setInjuryMeta(`Saved injury adjustment for ${team}.`);
+    await loadInjuries({ silent: true });
+    await loadUpcomingMatches({ force: true, silent: true });
+  } catch (error) {
+    setInjuryMeta(error.message);
+  }
+}
+
+async function deleteCurrentTeamInjury() {
+  const sport = injurySportSelect.value;
+  const team = injuryTeamInput.value.trim();
+  if (!team) {
+    setInjuryMeta("Enter a team name to delete.");
+    return;
+  }
+  const confirmed = window.confirm(`Delete injury adjustment for ${team} in ${sport.replace("_", " ")}?`);
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/injuries", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sport, team }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || "Failed to delete injury adjustment.");
+    }
+    setInjuryMeta(`Deleted ${result.deleted_rows} row(s).`);
+    await loadInjuries({ silent: true });
+    await loadUpcomingMatches({ force: true, silent: true });
+  } catch (error) {
+    setInjuryMeta(error.message);
+  }
+}
+
+async function clearSportInjuries() {
+  const sport = injurySportSelect.value;
+  const confirmed = window.confirm(`Clear all injury adjustments for ${sport.replace("_", " ")}?`);
+  if (!confirmed) return;
+
+  try {
+    const response = await fetch("/api/injuries", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sport }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.error || "Failed to clear injury adjustments.");
+    }
+    setInjuryMeta(`Deleted ${result.deleted_rows} row(s) for ${sport.replace("_", " ")}.`);
+    await loadInjuries({ silent: true });
+    await loadUpcomingMatches({ force: true, silent: true });
+  } catch (error) {
+    setInjuryMeta(error.message);
+  }
+}
+
 loadMatchesBtn.addEventListener("click", () => loadUpcomingMatches({ force: true }));
 leagueFilter.addEventListener("change", renderUpcomingMatches);
 teamFilter.addEventListener("input", renderUpcomingMatches);
@@ -360,12 +554,19 @@ historyTeam.addEventListener("input", () => loadHistory({ silent: true }));
 historyLimit.addEventListener("change", () => loadHistory({ silent: true }));
 
 whatIfForm.addEventListener("submit", submitWhatIf);
+injuryForm.addEventListener("submit", saveInjury);
+injurySportSelect.addEventListener("change", () => loadInjuries({ silent: false }));
+deleteInjuryBtn.addEventListener("click", deleteCurrentTeamInjury);
+clearSportInjuriesBtn.addEventListener("click", clearSportInjuries);
+
 sportSelect.addEventListener("change", () => {
   whatIfSportSelect.value = sportSelect.value;
   historySport.value = sportSelect.value;
+  injurySportSelect.value = sportSelect.value;
   loadUpcomingMatches({ force: true });
 });
 
 setAutoRefresh();
 loadUpcomingMatches({ force: true });
 loadHistory({ silent: false });
+loadInjuries({ silent: false });

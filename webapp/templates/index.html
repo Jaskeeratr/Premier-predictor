@@ -57,6 +57,10 @@
         </div>
       </div>
       <p id="upcoming-meta" class="meta"></p>
+      <p class="meta confidence-note">
+        Confidence is the predicted winner's probability. If it is below 50%, that side is still the top pick,
+        but the match is more uncertain.
+      </p>
       <div class="table-wrap">
         <table id="upcoming-table">
           <thead>
@@ -72,6 +76,70 @@
             </tr>
           </thead>
           <tbody id="upcoming-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Injury Adjustments</h2>
+        <p>Manually push team strength up/down for injuries, suspensions, or lineup news.</p>
+      </div>
+      <form id="injury-form" class="what-if-grid">
+        <div>
+          <label for="injury-sport">Sport</label>
+          <select id="injury-sport" name="sport">
+            {% for sport in sports %}
+            <option value="{{ sport.key }}">{{ sport.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="injury-team">Team</label>
+          <input id="injury-team" name="team" type="text" placeholder="Team name" required>
+        </div>
+        <div>
+          <label for="injury-rating">Rating Delta</label>
+          <input id="injury-rating" name="rating_delta" type="number" step="1" value="0">
+        </div>
+        <div>
+          <label for="injury-form-delta">Form Delta</label>
+          <input id="injury-form-delta" name="form_delta" type="number" step="0.01" value="0">
+        </div>
+        <div>
+          <label for="injury-offense">Offense Delta</label>
+          <input id="injury-offense" name="offense_delta" type="number" step="0.1" value="0">
+        </div>
+        <div>
+          <label for="injury-defense">Defense Delta</label>
+          <input id="injury-defense" name="defense_delta" type="number" step="0.1" value="0">
+        </div>
+        <div class="full-row">
+          <label for="injury-notes">Notes</label>
+          <input id="injury-notes" name="notes" type="text" placeholder="Optional note (e.g., starting striker out)">
+        </div>
+        <div class="full-row form-actions">
+          <button id="save-injury-btn" type="submit">Save Injury Adjustment</button>
+          <button id="delete-injury-btn" type="button" class="danger-btn">Delete Team Adjustment</button>
+          <button id="clear-sport-injuries-btn" type="button" class="danger-btn">Clear Sport Adjustments</button>
+        </div>
+      </form>
+      <p id="injury-meta" class="meta"></p>
+      <div class="table-wrap">
+        <table id="injury-table">
+          <thead>
+            <tr>
+              <th>Updated (UTC)</th>
+              <th>Sport</th>
+              <th>Team</th>
+              <th>Rating Delta</th>
+              <th>Form Delta</th>
+              <th>Offense Delta</th>
+              <th>Defense Delta</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody id="injury-body"></tbody>
         </table>
       </div>
     </section>
@@ -194,6 +262,10 @@
         <div class="checkbox-row">
           <label for="neutral-site">Neutral Site (remove home edge)</label>
           <input id="neutral-site" name="neutral_site" type="checkbox">
+        </div>
+        <div class="checkbox-row">
+          <label for="ignore-injuries">Ignore Injury Adjustments</label>
+          <input id="ignore-injuries" name="ignore_injuries" type="checkbox">
         </div>
         <div class="full-row">
           <button type="submit">Run What-If Prediction</button>

@@ -137,6 +137,10 @@ button:hover {
   font-size: 0.9rem;
 }
 
+.confidence-note {
+  margin-top: -0.3rem;
+}
+
 .table-wrap {
   overflow-x: auto;
   border: 1px solid var(--line);
@@ -164,6 +168,14 @@ td {
 
 tbody tr:nth-child(even) {
   background: #f8fafc;
+}
+
+.injury-row {
+  cursor: pointer;
+}
+
+.injury-row:hover {
+  background: #eef6ff;
 }
 
 .winner {
@@ -197,6 +209,12 @@ tbody tr:nth-child(even) {
 
 .full-row {
   grid-column: 1 / -1;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
 }
 
 .result-card {
@@ -236,7 +254,8 @@ tbody tr:nth-child(even) {
   .control-group,
   .controls select,
   .controls button,
-  .controls input {
+  .controls input,
+  .form-actions button {
     width: 100%;
   }
 }
