@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multi-Sport Match Predictor</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero">
+      <p class="eyebrow">Interactive Prediction Studio</p>
+      <h1>Multi-Sport Match Predictor</h1>
+      <p>
+        Choose a sport, pull upcoming matches, and get winner plus rough score predictions powered by
+        recent form, home advantage, and scoring trends.
+      </p>
+    </section>
+
+    <section class="panel" id="what-if-section">
+      <div class="panel-header">
+        <h2>Upcoming Matches</h2>
+        <p>Live feed + automatic predictions.</p>
+      </div>
+      <div class="controls">
+        <div class="control-group">
+          <label for="sport-select">Sport</label>
+          <select id="sport-select" aria-label="Select sport">
+            {% for sport in sports %}
+            <option value="{{ sport.key }}">{{ sport.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="league-filter">League Filter</label>
+          <select id="league-filter" aria-label="League filter">
+            <option value="">All leagues</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="team-filter">Team Filter</label>
+          <input id="team-filter" type="text" placeholder="Search by team">
+        </div>
+        <div class="control-group">
+          <label for="refresh-interval">Auto Refresh</label>
+          <select id="refresh-interval" aria-label="Auto refresh interval">
+            <option value="0">Off</option>
+            <option value="1">Every 1 min</option>
+            <option value="3">Every 3 min</option>
+            <option value="5" selected>Every 5 min</option>
+            <option value="10">Every 10 min</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>&nbsp;</label>
+          <button id="load-matches-btn" type="button">Load Matches</button>
+        </div>
+      </div>
+      <p id="upcoming-meta" class="meta"></p>
+      <div class="table-wrap">
+        <table id="upcoming-table">
+          <thead>
+            <tr>
+              <th>Kickoff (UTC)</th>
+              <th>League</th>
+              <th>Match</th>
+              <th>Venue</th>
+              <th>Predicted Winner</th>
+              <th>Confidence</th>
+              <th>Rough Score</th>
+              <th>What-If</th>
+            </tr>
+          </thead>
+          <tbody id="upcoming-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>Saved Prediction History</h2>
+        <p>Snapshots are auto-saved in SQLite when you load upcoming matches.</p>
+      </div>
+      <div class="controls">
+        <div class="control-group">
+          <label for="history-sport">Sport</label>
+          <select id="history-sport">
+            <option value="">All sports</option>
+            {% for sport in sports %}
+            <option value="{{ sport.key }}">{{ sport.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="history-league">League Search</label>
+          <input id="history-league" type="text" placeholder="League name">
+        </div>
+        <div class="control-group">
+          <label for="history-team">Team Search</label>
+          <input id="history-team" type="text" placeholder="Team name">
+        </div>
+        <div class="control-group">
+          <label for="history-limit">Rows</label>
+          <select id="history-limit">
+            <option value="50">50</option>
+            <option value="100" selected>100</option>
+            <option value="200">200</option>
+            <option value="500">500</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label>&nbsp;</label>
+          <button id="load-history-btn" type="button">Load History</button>
+        </div>
+        <div class="control-group">
+          <label>&nbsp;</label>
+          <button id="clear-history-btn" type="button" class="danger-btn">Clear History</button>
+        </div>
+      </div>
+      <p id="history-meta" class="meta"></p>
+      <div class="table-wrap">
+        <table id="history-table">
+          <thead>
+            <tr>
+              <th>Saved At (UTC)</th>
+              <th>Kickoff (UTC)</th>
+              <th>Sport</th>
+              <th>League</th>
+              <th>Match</th>
+              <th>Predicted Winner</th>
+              <th>Confidence</th>
+              <th>Rough Score</th>
+            </tr>
+          </thead>
+          <tbody id="history-body"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2>What-If Simulator</h2>
+        <p>Edit team ratings, form, and scoring to test alternate scenarios.</p>
+      </div>
+      <form id="what-if-form" class="what-if-grid">
+        <div>
+          <label for="whatif-sport">Sport</label>
+          <select id="whatif-sport" name="sport">
+            {% for sport in sports %}
+            <option value="{{ sport.key }}">{{ sport.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label for="home-team">Home Team</label>
+          <input id="home-team" name="home_team" type="text" value="Home Team" required>
+        </div>
+        <div>
+          <label for="away-team">Away Team</label>
+          <input id="away-team" name="away_team" type="text" value="Away Team" required>
+        </div>
+        <div>
+          <label for="home-rating">Home Rating</label>
+          <input id="home-rating" name="home_rating" type="number" step="1" value="1520">
+        </div>
+        <div>
+          <label for="away-rating">Away Rating</label>
+          <input id="away-rating" name="away_rating" type="number" step="1" value="1490">
+        </div>
+        <div>
+          <label for="home-form">Home Form (0-1)</label>
+          <input id="home-form" name="home_form" type="number" min="0" max="1" step="0.01" value="0.60">
+        </div>
+        <div>
+          <label for="away-form">Away Form (0-1)</label>
+          <input id="away-form" name="away_form" type="number" min="0" max="1" step="0.01" value="0.45">
+        </div>
+        <div>
+          <label for="home-scored">Home Avg Scored</label>
+          <input id="home-scored" name="home_avg_scored" type="number" step="0.1" value="2.0">
+        </div>
+        <div>
+          <label for="away-scored">Away Avg Scored</label>
+          <input id="away-scored" name="away_avg_scored" type="number" step="0.1" value="1.4">
+        </div>
+        <div>
+          <label for="home-allowed">Home Avg Allowed</label>
+          <input id="home-allowed" name="home_avg_allowed" type="number" step="0.1" value="1.0">
+        </div>
+        <div>
+          <label for="away-allowed">Away Avg Allowed</label>
+          <input id="away-allowed" name="away_avg_allowed" type="number" step="0.1" value="1.5">
+        </div>
+        <div class="checkbox-row">
+          <label for="neutral-site">Neutral Site (remove home edge)</label>
+          <input id="neutral-site" name="neutral_site" type="checkbox">
+        </div>
+        <div class="full-row">
+          <button type="submit">Run What-If Prediction</button>
+        </div>
+      </form>
+      <div id="what-if-result" class="result-card hidden"></div>
+    </section>
+  </main>
+
+  <script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
