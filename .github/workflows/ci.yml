@@ -24,8 +24,9 @@ jobs:
 
       - name: Lint
         run: |
+          black --version
           ruff check .
-          black --check .
+          black --required-version 26.5.1 --check .
 
       - name: Test
         run: pytest
