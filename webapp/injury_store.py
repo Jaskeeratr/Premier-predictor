@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-import sqlite3
 from typing import Any
 
 from webapp.history_store import DEFAULT_DB_PATH
@@ -20,8 +20,7 @@ def _connect(db_path: Path | None = None) -> sqlite3.Connection:
 
 def init_injury_store(db_path: Path | None = None) -> None:
     with _connect(db_path) as conn:
-        conn.execute(
-            """
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS injury_adjustments (
                 sport TEXT NOT NULL,
                 team TEXT NOT NULL,
@@ -33,8 +32,7 @@ def init_injury_store(db_path: Path | None = None) -> None:
                 updated_at_utc TEXT NOT NULL,
                 PRIMARY KEY (sport, team)
             )
-            """
-        )
+            """)
         conn.execute("CREATE INDEX IF NOT EXISTS idx_injury_sport ON injury_adjustments(sport)")
         conn.commit()
 

@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
 import hashlib
 import json
-from pathlib import Path
 import sqlite3
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -20,18 +20,15 @@ def _connect(db_path: Path | None = None) -> sqlite3.Connection:
 
 def init_history_db(db_path: Path | None = None) -> None:
     with _connect(db_path) as conn:
-        conn.execute(
-            """
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS prediction_snapshots (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 sport TEXT NOT NULL,
                 generated_at_utc TEXT NOT NULL,
                 signature TEXT NOT NULL
             )
-            """
-        )
-        conn.execute(
-            """
+            """)
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS prediction_history (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 snapshot_id INTEGER NOT NULL,
@@ -53,10 +50,13 @@ def init_history_db(db_path: Path | None = None) -> None:
                 created_at_utc TEXT NOT NULL,
                 FOREIGN KEY(snapshot_id) REFERENCES prediction_snapshots(id)
             )
-            """
+            """)
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_history_sport_created ON prediction_history(sport, created_at_utc)"
         )
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_history_sport_created ON prediction_history(sport, created_at_utc)")
-        conn.execute("CREATE INDEX IF NOT EXISTS idx_history_teams ON prediction_history(home_team, away_team)")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_history_teams ON prediction_history(home_team, away_team)"
+        )
         conn.execute("CREATE INDEX IF NOT EXISTS idx_history_league ON prediction_history(league)")
         conn.commit()
 

@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  predictor-web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: predictor-web
+    ports:
+      - "5000:5000"
+    environment:
+      APP_DEBUG: "0"
+      HOST: 0.0.0.0
+      LOG_LEVEL: "INFO"
+      PREDICTOR_DEMO_MODE: "true"
+      PREDICTOR_DB_PATH: /data/prediction_history.db
+      PREDICTOR_MODEL_DIR: /data/models
+    volumes:
+      - predictor_data:/data
+    command: python run_webapp.py
+
+volumes:
+  predictor_data:

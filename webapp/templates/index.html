@@ -8,6 +8,10 @@
 </head>
 <body>
   <main class="app-shell">
+    <section id="demo-banner" class="demo-banner hidden">
+      Running in Demo Mode: live API data is unavailable, using deterministic sample data.
+    </section>
+
     <section class="hero">
       <p class="eyebrow">Interactive Prediction Studio</p>
       <h1>Multi-Sport Match Predictor</h1>
@@ -17,7 +21,34 @@
       </p>
     </section>
 
-    <section class="panel" id="what-if-section">
+    <section class="panel">
+      <div class="nav-strip">
+        <a href="#upcoming-panel">Upcoming</a>
+        <a href="#model-panel">Model</a>
+        <a href="#history-panel">History</a>
+        <a href="#what-if-section">What-If</a>
+      </div>
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <span>Total Matches</span>
+          <strong id="kpi-total-matches">-</strong>
+        </div>
+        <div class="kpi-card">
+          <span>Avg Confidence</span>
+          <strong id="kpi-avg-confidence">-</strong>
+        </div>
+        <div class="kpi-card">
+          <span>Top League</span>
+          <strong id="kpi-top-league">-</strong>
+        </div>
+        <div class="kpi-card">
+          <span>Model</span>
+          <strong id="kpi-model">-</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel" id="upcoming-panel">
       <div class="panel-header">
         <h2>Upcoming Matches</h2>
         <p>Live feed + automatic predictions.</p>
@@ -71,6 +102,7 @@
               <th>Venue</th>
               <th>Predicted Winner</th>
               <th>Confidence</th>
+              <th>Confidence Bar</th>
               <th>Rough Score</th>
               <th>What-If</th>
             </tr>
@@ -144,7 +176,29 @@
       </div>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="model-panel">
+      <div class="panel-header">
+        <h2>Model Summary</h2>
+        <p>Current training metrics and top feature signals for the selected sport.</p>
+      </div>
+      <p id="model-meta" class="meta"></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Metric</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="model-metrics-body">
+            <tr><td colspan="2">No model summary loaded.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div id="feature-importance-wrap" class="feature-bars"></div>
+    </section>
+
+    <section class="panel" id="history-panel">
       <div class="panel-header">
         <h2>Saved Prediction History</h2>
         <p>Snapshots are auto-saved in SQLite when you load upcoming matches.</p>
@@ -186,6 +240,7 @@
         </div>
       </div>
       <p id="history-meta" class="meta"></p>
+      <div id="history-chart" class="history-chart"></div>
       <div class="table-wrap">
         <table id="history-table">
           <thead>
@@ -205,7 +260,7 @@
       </div>
     </section>
 
-    <section class="panel">
+    <section class="panel" id="what-if-section">
       <div class="panel-header">
         <h2>What-If Simulator</h2>
         <p>Edit team ratings, form, and scoring to test alternate scenarios.</p>

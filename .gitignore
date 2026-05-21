@@ -3,3 +3,8 @@ __pycache__/
 *.pyc
 webapp/prediction_history.db
 webapp/models/
+.pytest_cache/
+.ruff_cache/
+reports/*.html
+reports/*.csv
+artifacts/

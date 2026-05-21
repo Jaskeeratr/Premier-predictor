@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any
 import hashlib
 import math
+from dataclasses import dataclass, field
+from typing import Any
 
 from webapp.data_sources import SUPPORTED_SPORTS
 
@@ -116,7 +116,9 @@ def _append_form(team: TeamStats, outcome: float) -> None:
         team.form_results.pop(0)
 
 
-def _build_team_stats(completed_events: list[dict[str, Any]], sport_key: str) -> tuple[dict[str, TeamStats], dict[str, float]]:
+def _build_team_stats(
+    completed_events: list[dict[str, Any]], sport_key: str
+) -> tuple[dict[str, TeamStats], dict[str, float]]:
     profile = SPORT_PROFILES[sport_key]
     teams: dict[str, TeamStats] = {}
     total_home = 0.0
@@ -197,7 +199,9 @@ def _team_bias(team_name: str) -> float:
     return (raw / ((1 << 64) - 1)) - 0.5
 
 
-def _with_team_priors(sport_key: str, team_name: str, team: TeamStats, league_context: dict[str, float]) -> TeamStats:
+def _with_team_priors(
+    sport_key: str, team_name: str, team: TeamStats, league_context: dict[str, float]
+) -> TeamStats:
     if team.games > 0:
         return team
 

@@ -1,5 +1,11 @@
-from webapp.app import app
+import os
+
+from webapp import create_app
+
+app = create_app()
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    host = os.getenv("HOST", "127.0.0.1")
+    port = int(os.getenv("PORT", "5000"))
+    app.run(debug=app.config.get("DEBUG", False), host=host, port=port)
