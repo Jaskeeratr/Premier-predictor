@@ -5,6 +5,9 @@ on:
     branches: [main, master]
   pull_request:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: "true"
+
 jobs:
   test-and-lint:
     runs-on: ubuntu-latest
@@ -29,7 +32,12 @@ jobs:
           black --required-version 26.5.1 --check .
 
       - name: Test
-        run: pytest
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+        run: |
+          python -c "import os,sys; print('cwd=', os.getcwd()); print('python=', sys.version)"
+          python -c "import webapp; print('webapp=', webapp.__file__)"
+          python -m pytest
 
   frontend-build:
     runs-on: ubuntu-latest
