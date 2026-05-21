@@ -73,6 +73,13 @@
           <input id="team-filter" type="text" placeholder="Search by team">
         </div>
         <div class="control-group">
+          <label for="upcoming-view-mode">View Mode</label>
+          <select id="upcoming-view-mode" aria-label="Upcoming view mode">
+            <option value="table" selected>Table</option>
+            <option value="cards">Cards</option>
+          </select>
+        </div>
+        <div class="control-group">
           <label for="refresh-interval">Auto Refresh</label>
           <select id="refresh-interval" aria-label="Auto refresh interval">
             <option value="0">Off</option>
@@ -92,7 +99,7 @@
         Confidence is the predicted winner's probability. If it is below 50%, that side is still the top pick,
         but the match is more uncertain.
       </p>
-      <div class="table-wrap">
+      <div id="upcoming-table-wrap" class="table-wrap">
         <table id="upcoming-table">
           <thead>
             <tr>
@@ -110,6 +117,7 @@
           <tbody id="upcoming-body"></tbody>
         </table>
       </div>
+      <div id="upcoming-cards" class="match-cards hidden"></div>
     </section>
 
     <section class="panel">
@@ -327,6 +335,28 @@
         </div>
       </form>
       <div id="what-if-result" class="result-card hidden"></div>
+    </section>
+
+    <section class="panel" id="team-compare-panel">
+      <div class="panel-header">
+        <h2>Team Comparison</h2>
+        <p>Compare two teams from the current filtered upcoming set.</p>
+      </div>
+      <div class="controls">
+        <div class="control-group">
+          <label for="compare-team-a">Team A</label>
+          <select id="compare-team-a"></select>
+        </div>
+        <div class="control-group">
+          <label for="compare-team-b">Team B</label>
+          <select id="compare-team-b"></select>
+        </div>
+        <div class="control-group">
+          <label>&nbsp;</label>
+          <button id="compare-teams-btn" type="button">Compare Teams</button>
+        </div>
+      </div>
+      <div id="team-compare-result" class="compare-grid"></div>
     </section>
   </main>
 

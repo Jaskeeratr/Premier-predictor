@@ -7,13 +7,13 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 from typing import Any
 
-from webapp.adaptive_model import adaptive_probabilities_for_upcoming
 from webapp.config import AppConfig
 from webapp.data_sources import SUPPORTED_SPORTS, fetch_sport_events_with_meta
 from webapp.errors import ValidationError
 from webapp.history_store import save_prediction_snapshot
 from webapp.injury_store import get_injury_adjustments_map
-from webapp.prediction_engine import predict_upcoming_matches, run_what_if_scenario
+from webapp.ml.engines import AdaptiveProbabilityEngine, HeuristicPredictionEngine
+from webapp.ml.interfaces import PredictionEngine, ProbabilityEngine
 
 LOGGER = logging.getLogger(__name__)
 
@@ -31,9 +31,17 @@ class CacheRow:
 
 
 class PredictionService:
-    def __init__(self, config: AppConfig) -> None:
+    def __init__(
+        self,
+        config: AppConfig,
+        *,
+        prediction_engine: PredictionEngine | None = None,
+        probability_engine: ProbabilityEngine | None = None,
+    ) -> None:
         self._config = config
         self._cache: dict[str, CacheRow] = {}
+        self._prediction_engine = prediction_engine or HeuristicPredictionEngine()
+        self._probability_engine = probability_engine or AdaptiveProbabilityEngine(config.db_path)
 
     def clear_cache(self, sport: str | None = None) -> None:
         if sport:
@@ -185,16 +193,15 @@ class PredictionService:
             days_ahead=30,
             force_demo_mode=bool(self._config.demo_mode),
         )
-        predictions = predict_upcoming_matches(
+        predictions = self._prediction_engine.predict_upcoming(
             sport_key,
             completed_events=completed,
             upcoming_events=upcoming,
         )
-        adaptive_probs, training_info = adaptive_probabilities_for_upcoming(
+        adaptive_probs, training_info = self._probability_engine.probabilities_for_upcoming(
             sport_key,
             completed_events_from_feed=completed,
             upcoming_events=upcoming,
-            db_path=self._config.db_path,
         )
         injury_map = get_injury_adjustments_map(sport_key, db_path=self._config.db_path)
 
@@ -241,7 +248,7 @@ class PredictionService:
         sport_key = str(payload["sport"])
         self.validate_sport(sport_key)
 
-        prediction = run_what_if_scenario(payload)
+        prediction = self._prediction_engine.predict_what_if(payload)
         if not _as_bool(payload.get("ignore_injuries", False)):
             injury_map = get_injury_adjustments_map(sport_key, db_path=self._config.db_path)
             self.apply_injury_adjustments(prediction, injury_map)

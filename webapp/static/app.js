@@ -3,7 +3,10 @@ const loadMatchesBtn = document.getElementById("load-matches-btn");
 const leagueFilter = document.getElementById("league-filter");
 const teamFilter = document.getElementById("team-filter");
 const refreshIntervalSelect = document.getElementById("refresh-interval");
+const upcomingViewModeSelect = document.getElementById("upcoming-view-mode");
 const upcomingBody = document.getElementById("upcoming-body");
+const upcomingTableWrap = document.getElementById("upcoming-table-wrap");
+const upcomingCards = document.getElementById("upcoming-cards");
 const upcomingMeta = document.getElementById("upcoming-meta");
 const demoBanner = document.getElementById("demo-banner");
 
@@ -43,6 +46,10 @@ const kpiTotalMatches = document.getElementById("kpi-total-matches");
 const kpiAvgConfidence = document.getElementById("kpi-avg-confidence");
 const kpiTopLeague = document.getElementById("kpi-top-league");
 const kpiModel = document.getElementById("kpi-model");
+const compareTeamASelect = document.getElementById("compare-team-a");
+const compareTeamBSelect = document.getElementById("compare-team-b");
+const compareTeamsBtn = document.getElementById("compare-teams-btn");
+const teamCompareResult = document.getElementById("team-compare-result");
 
 let allUpcomingMatches = [];
 let autoRefreshHandle = null;
@@ -219,10 +226,62 @@ function filterUpcomingMatches() {
   });
 }
 
+function updateTeamComparisonOptions(matches) {
+  const teams = [...new Set(matches.flatMap((m) => [m.home_team, m.away_team]).filter(Boolean))].sort((a, b) =>
+    a.localeCompare(b),
+  );
+  const currentA = compareTeamASelect.value;
+  const currentB = compareTeamBSelect.value;
+
+  compareTeamASelect.innerHTML = `<option value="">Select team</option>${teams.map((t) => `<option value="${t}">${t}</option>`).join("")}`;
+  compareTeamBSelect.innerHTML = `<option value="">Select team</option>${teams.map((t) => `<option value="${t}">${t}</option>`).join("")}`;
+
+  if (teams.includes(currentA)) compareTeamASelect.value = currentA;
+  if (teams.includes(currentB)) compareTeamBSelect.value = currentB;
+}
+
+function renderUpcomingCards(matches) {
+  if (!matches.length) {
+    upcomingCards.innerHTML = `<div class="history-empty">No matches match the current filters.</div>`;
+    return;
+  }
+  upcomingCards.innerHTML = matches
+    .map(
+      (match) => `
+      <article class="match-card">
+        <h3>${match.home_team} vs ${match.away_team}</h3>
+        <p><strong>${asLocalTimestamp(match.kickoff_utc)}</strong> | ${match.league}</p>
+        <p>Venue: ${match.venue || "Unknown Venue"}</p>
+        <p class="winner">Winner: ${match.predicted_winner}</p>
+        <p class="confidence">Confidence: ${pct(match.confidence)}</p>
+        ${confidenceBar(match.confidence)}
+        <p>Rough Score: ${match.predicted_score}</p>
+        <p><button type="button" class="use-match-btn" data-event-id="${match.event_id}">Use In What-If</button></p>
+      </article>
+    `,
+    )
+    .join("");
+}
+
+function applyUpcomingViewMode() {
+  const mode = upcomingViewModeSelect.value;
+  if (mode === "cards") {
+    upcomingTableWrap.classList.add("hidden");
+    upcomingCards.classList.remove("hidden");
+  } else {
+    upcomingTableWrap.classList.remove("hidden");
+    upcomingCards.classList.add("hidden");
+  }
+}
+
 function renderUpcomingMatches() {
   const matches = filterUpcomingMatches();
   if (!matches.length) {
     upcomingBody.innerHTML = `<tr><td colspan="9">No matches match the current filters.</td></tr>`;
+    renderUpcomingCards([]);
+    updateTeamComparisonOptions([]);
+    teamCompareResult.innerHTML = `<div class="history-empty">No teams available for comparison with current filters.</div>`;
+    applyUpcomingViewMode();
     return;
   }
 
@@ -240,8 +299,11 @@ function renderUpcomingMatches() {
       </tr>
     `);
   upcomingBody.innerHTML = rows.join("");
+  renderUpcomingCards(matches);
+  updateTeamComparisonOptions(matches);
+  applyUpcomingViewMode();
 
-  const buttons = upcomingBody.querySelectorAll(".use-match-btn");
+  const buttons = document.querySelectorAll(".use-match-btn");
   buttons.forEach((button) => {
     button.addEventListener("click", () => {
       const eventId = button.getAttribute("data-event-id");
@@ -254,6 +316,59 @@ function renderUpcomingMatches() {
       setTimeout(() => whatIfForm.requestSubmit(), 120);
     });
   });
+}
+
+function compareTeamsFromCurrentData() {
+  const teamA = compareTeamASelect.value;
+  const teamB = compareTeamBSelect.value;
+  if (!teamA || !teamB) {
+    teamCompareResult.innerHTML = `<div class="history-empty">Select both teams to compare.</div>`;
+    return;
+  }
+  if (teamA === teamB) {
+    teamCompareResult.innerHTML = `<div class="history-empty">Select two different teams.</div>`;
+    return;
+  }
+
+  const relevant = allUpcomingMatches.filter(
+    (m) => m.home_team === teamA || m.away_team === teamA || m.home_team === teamB || m.away_team === teamB,
+  );
+  const summarize = (team) => {
+    const teamMatches = relevant.filter((m) => m.home_team === team || m.away_team === team);
+    const avgConfidence =
+      teamMatches.length > 0
+        ? teamMatches.reduce((acc, row) => acc + Number(row.confidence || 0), 0) / teamMatches.length
+        : 0;
+    const predictedWins = teamMatches.filter((m) => m.predicted_winner === team).length;
+    return {
+      matchCount: teamMatches.length,
+      predictedWins,
+      avgConfidence,
+      nextGame:
+        teamMatches
+          .map((m) => ({ ...m, kickoffTs: Date.parse(m.kickoff_utc) || Number.MAX_SAFE_INTEGER }))
+          .sort((a, b) => a.kickoffTs - b.kickoffTs)[0] || null,
+    };
+  };
+
+  const a = summarize(teamA);
+  const b = summarize(teamB);
+  teamCompareResult.innerHTML = `
+    <article class="compare-card">
+      <h4>${teamA}</h4>
+      <div class="compare-row"><span>Upcoming Matches</span><strong>${a.matchCount}</strong></div>
+      <div class="compare-row"><span>Predicted Wins</span><strong>${a.predictedWins}</strong></div>
+      <div class="compare-row"><span>Avg Confidence</span><strong>${pct(a.avgConfidence)}</strong></div>
+      <div class="compare-row"><span>Next Match</span><strong>${a.nextGame ? `${a.nextGame.home_team} vs ${a.nextGame.away_team}` : "-"}</strong></div>
+    </article>
+    <article class="compare-card">
+      <h4>${teamB}</h4>
+      <div class="compare-row"><span>Upcoming Matches</span><strong>${b.matchCount}</strong></div>
+      <div class="compare-row"><span>Predicted Wins</span><strong>${b.predictedWins}</strong></div>
+      <div class="compare-row"><span>Avg Confidence</span><strong>${pct(b.avgConfidence)}</strong></div>
+      <div class="compare-row"><span>Next Match</span><strong>${b.nextGame ? `${b.nextGame.home_team} vs ${b.nextGame.away_team}` : "-"}</strong></div>
+    </article>
+  `;
 }
 
 function renderModelSummary(payload) {
@@ -622,6 +737,7 @@ loadMatchesBtn.addEventListener("click", () => loadUpcomingMatches({ force: true
 leagueFilter.addEventListener("change", renderUpcomingMatches);
 teamFilter.addEventListener("input", renderUpcomingMatches);
 refreshIntervalSelect.addEventListener("change", setAutoRefresh);
+upcomingViewModeSelect.addEventListener("change", applyUpcomingViewMode);
 
 loadHistoryBtn.addEventListener("click", () => loadHistory({ silent: false }));
 clearHistoryBtn.addEventListener("click", clearHistory);
@@ -635,6 +751,9 @@ injuryForm.addEventListener("submit", saveInjury);
 injurySportSelect.addEventListener("change", () => loadInjuries({ silent: false }));
 deleteInjuryBtn.addEventListener("click", deleteCurrentTeamInjury);
 clearSportInjuriesBtn.addEventListener("click", clearSportInjuries);
+compareTeamsBtn.addEventListener("click", compareTeamsFromCurrentData);
+compareTeamASelect.addEventListener("change", compareTeamsFromCurrentData);
+compareTeamBSelect.addEventListener("change", compareTeamsFromCurrentData);
 
 sportSelect.addEventListener("change", () => {
   whatIfSportSelect.value = sportSelect.value;
@@ -648,4 +767,4 @@ loadUpcomingMatches({ force: true });
 loadHistory({ silent: false });
 loadInjuries({ silent: false });
 loadModelSummary({ silent: false });
-
+applyUpcomingViewMode();

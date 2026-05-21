@@ -1,4 +1,4 @@
-.PHONY: install install-dev run test lint format docker-up
+.PHONY: install install-dev run test lint format docker-up frontend-build
 
 install:
 	python -m pip install -r requirements.txt
@@ -22,3 +22,7 @@ format:
 
 docker-up:
 	docker compose up --build
+
+frontend-build:
+	npm ci
+	npm run build:frontend

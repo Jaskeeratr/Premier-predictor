@@ -299,6 +299,56 @@ tbody tr:nth-child(even) {
   background: linear-gradient(90deg, #0891b2, #2563eb);
 }
 
+.match-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 0.7rem;
+}
+
+.match-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.8rem;
+  background: #fbfdff;
+}
+
+.match-card h3 {
+  margin: 0 0 0.3rem;
+  font-size: 1rem;
+}
+
+.match-card p {
+  margin: 0.22rem 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.compare-grid {
+  margin-top: 0.6rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.7rem;
+}
+
+.compare-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: #fbfdff;
+}
+
+.compare-card h4 {
+  margin: 0 0 0.4rem;
+}
+
+.compare-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.87rem;
+  color: #334155;
+  margin: 0.2rem 0;
+}
+
 .what-if-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));

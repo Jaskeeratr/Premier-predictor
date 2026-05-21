@@ -1,0 +1,11 @@
+{
+  "name": "premier-predictor-frontend-build",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Minimal frontend build tooling for CI artifact generation",
+  "scripts": {
+    "build:frontend": "node scripts/build_frontend.mjs",
+    "check:frontend": "node --check webapp/static/app.js"
+  }
+}
+
