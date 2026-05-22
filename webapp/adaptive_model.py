@@ -825,6 +825,62 @@ def get_latest_model_summary(sport: str, db_path: Path | None = None) -> dict[st
     return None
 
 
+def get_model_health_summary(sport: str, db_path: Path | None = None) -> dict[str, Any]:
+    cfg = _sport_config(sport)
+    latest = _load_latest_model_run(sport, db_path=db_path)
+    event_count = len(_load_training_events(sport, db_path=db_path))
+
+    if not latest:
+        return {
+            "sport": sport,
+            "status": "Needs More Data",
+            "reason": "No trained model run found.",
+            "sample_count": 0,
+            "required_min_samples": cfg.min_samples,
+            "completed_events_count": event_count,
+        }
+
+    sample_count = int(latest.get("sample_count", 0) or 0)
+    cv_accuracy = float(latest.get("cv_accuracy", 0.0) or 0.0)
+    cv_log_loss = float(latest.get("cv_log_loss", 0.0) or 0.0)
+    cv_brier = float(latest.get("cv_brier", 0.0) or 0.0)
+    cv_ece = float(latest.get("cv_ece", 0.0) or 0.0)
+    holdout_accuracy = float(latest.get("holdout_accuracy", 0.0) or 0.0)
+    trained_at = str(latest.get("trained_at_utc") or "")
+
+    if sample_count < cfg.min_samples:
+        status = "Needs More Data"
+        reason = f"Sample count {sample_count} is below required minimum {cfg.min_samples}."
+    elif sample_count < int(cfg.min_samples * 1.25):
+        status = "Undertrained"
+        reason = "Model is trained, but sample volume is still thin for stable calibration."
+    elif cv_accuracy < 0.52 or holdout_accuracy < 0.50 or cv_ece > 0.18:
+        status = "Low Confidence"
+        reason = "Performance and calibration metrics indicate unstable prediction quality."
+    else:
+        status = "Healthy"
+        reason = "Model has sufficient data and acceptable accuracy/calibration metrics."
+
+    return {
+        "sport": sport,
+        "status": status,
+        "reason": reason,
+        "sample_count": sample_count,
+        "required_min_samples": cfg.min_samples,
+        "completed_events_count": int(latest.get("completed_events_count", 0) or 0),
+        "last_trained_at_utc": trained_at,
+        "active_model": str(latest.get("best_model") or "unknown"),
+        "version": str(latest.get("version") or ""),
+        "metrics": {
+            "cv_accuracy": cv_accuracy,
+            "cv_log_loss": cv_log_loss,
+            "cv_brier": cv_brier,
+            "cv_ece": cv_ece,
+            "holdout_accuracy": holdout_accuracy,
+        },
+    }
+
+
 def adaptive_probabilities_for_upcoming(
     sport: str,
     completed_events_from_feed: list[dict[str, Any]],

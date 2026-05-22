@@ -274,7 +274,7 @@ tbody tr:nth-child(even) {
 }
 
 .injury-row:hover {
-  background: #eef6ff;
+  background: rgba(56, 189, 248, 0.12);
 }
 
 .winner {
@@ -309,7 +309,7 @@ tbody tr:nth-child(even) {
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 0.8rem;
-  background: #fbfdff;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(14, 116, 144, 0.14));
 }
 
 .match-card h3 {
@@ -323,6 +323,100 @@ tbody tr:nth-child(even) {
   font-size: 0.85rem;
 }
 
+.explain-line {
+  color: #dbeafe;
+}
+
+.top-factor-list {
+  margin: 0.35rem 0 0.55rem 1rem;
+  padding: 0;
+  color: #cbd5e1;
+  font-size: 0.8rem;
+}
+
+.top-factor-list li {
+  margin-bottom: 0.15rem;
+}
+
+.tier-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.18rem 0.5rem;
+  border: 1px solid transparent;
+}
+
+.tier-strong {
+  background: rgba(34, 197, 94, 0.18);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+.tier-lean {
+  background: rgba(14, 165, 233, 0.18);
+  color: #7dd3fc;
+  border-color: rgba(14, 165, 233, 0.55);
+}
+
+.tier-toss {
+  background: rgba(251, 191, 36, 0.18);
+  color: #fde68a;
+  border-color: rgba(251, 191, 36, 0.45);
+}
+
+.tier-uncertain {
+  background: rgba(251, 113, 133, 0.15);
+  color: #fda4af;
+  border-color: rgba(251, 113, 133, 0.45);
+}
+
+.risk-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin: 0.35rem 0;
+}
+
+.risk-tag {
+  font-size: 0.72rem;
+  border-radius: 999px;
+  padding: 0.15rem 0.45rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.risk-strong {
+  color: #bbf7d0;
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.risk-upset {
+  color: #fdba74;
+  border-color: rgba(249, 115, 22, 0.5);
+  background: rgba(249, 115, 22, 0.14);
+}
+
+.risk-high {
+  color: #fda4af;
+  border-color: rgba(244, 63, 94, 0.5);
+  background: rgba(244, 63, 94, 0.16);
+}
+
+.risk-momentum {
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.55);
+  background: rgba(59, 130, 246, 0.16);
+}
+
+.risk-neutral {
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.45);
+  background: rgba(148, 163, 184, 0.12);
+}
+
 .compare-grid {
   margin-top: 0.6rem;
   display: grid;
@@ -334,7 +428,7 @@ tbody tr:nth-child(even) {
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 0.75rem;
-  background: #fbfdff;
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.92), rgba(29, 78, 216, 0.12));
 }
 
 .compare-card h4 {
@@ -345,8 +439,134 @@ tbody tr:nth-child(even) {
   display: flex;
   justify-content: space-between;
   font-size: 0.87rem;
-  color: #334155;
+  color: #cbd5e1;
   margin: 0.2rem 0;
+}
+
+.model-health-card {
+  margin-bottom: 0.7rem;
+  padding: 0.75rem;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: linear-gradient(145deg, rgba(15, 23, 42, 0.94), rgba(14, 116, 144, 0.1));
+}
+
+.health-head {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.35rem;
+}
+
+.health-pill {
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.health-healthy {
+  color: #bbf7d0;
+  border-color: rgba(34, 197, 94, 0.45);
+  background: rgba(34, 197, 94, 0.15);
+}
+
+.health-needs-data {
+  color: #fde68a;
+  border-color: rgba(245, 158, 11, 0.48);
+  background: rgba(245, 158, 11, 0.15);
+}
+
+.health-undertrained {
+  color: #bfdbfe;
+  border-color: rgba(59, 130, 246, 0.5);
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.health-low-confidence {
+  color: #fda4af;
+  border-color: rgba(244, 63, 94, 0.52);
+  background: rgba(244, 63, 94, 0.15);
+}
+
+.health-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.5rem;
+}
+
+.health-grid div {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 0.45rem 0.55rem;
+  background: rgba(15, 23, 42, 0.6);
+}
+
+.health-grid span {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.health-grid strong {
+  font-size: 0.92rem;
+}
+
+.team-radar-wrap {
+  margin-top: 0.9rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 0.65rem;
+  background: rgba(2, 8, 23, 0.58);
+}
+
+.team-radar-wrap h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.95rem;
+}
+
+#team-radar {
+  width: 100%;
+  max-width: 340px;
+  display: block;
+}
+
+.radar-ring {
+  fill: rgba(148, 163, 184, 0.05);
+  stroke: rgba(148, 163, 184, 0.28);
+  stroke-width: 1;
+}
+
+.radar-axis {
+  stroke: rgba(148, 163, 184, 0.4);
+  stroke-width: 1;
+}
+
+.radar-label {
+  fill: #cbd5e1;
+  font-size: 10px;
+  text-anchor: middle;
+  dominant-baseline: middle;
+}
+
+.radar-shape.radar-a {
+  fill: rgba(34, 211, 238, 0.25);
+  stroke: rgba(34, 211, 238, 0.95);
+  stroke-width: 2;
+}
+
+.radar-shape.radar-b {
+  fill: rgba(163, 230, 53, 0.22);
+  stroke: rgba(163, 230, 53, 0.95);
+  stroke-width: 2;
+}
+
+.radar-legend text {
+  fill: #e2e8f0;
+  font-size: 10px;
 }
 
 .what-if-grid {

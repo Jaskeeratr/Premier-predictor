@@ -14,6 +14,7 @@ from webapp.history_store import save_prediction_snapshot
 from webapp.injury_store import get_injury_adjustments_map
 from webapp.ml.engines import AdaptiveProbabilityEngine, HeuristicPredictionEngine
 from webapp.ml.interfaces import PredictionEngine, ProbabilityEngine
+from webapp.services.explainability import enrich_prediction_explainability
 
 LOGGER = logging.getLogger(__name__)
 
@@ -84,6 +85,11 @@ class PredictionService:
             "away_win_probability": row["away_win_probability"],
             "predicted_score": row["predicted_score"],
             "factors": row["factors"],
+            "confidence_tier": row.get("confidence_tier", "Very Uncertain"),
+            "risk_indicators": row.get("risk_indicators", []),
+            "factor_contributions": row.get("factor_contributions", []),
+            "top_factors": row.get("top_factors", []),
+            "explanation": row.get("explanation", ""),
         }
 
     @staticmethod
@@ -213,6 +219,7 @@ class PredictionService:
             else:
                 prediction["model_source"] = "heuristic"
             self.apply_injury_adjustments(prediction, injury_map)
+            enrich_prediction_explainability(prediction)
 
         serialized = [self.serialize_prediction_row(item) for item in predictions[:120]]
         snapshot_id = save_prediction_snapshot(
@@ -252,4 +259,5 @@ class PredictionService:
         if not _as_bool(payload.get("ignore_injuries", False)):
             injury_map = get_injury_adjustments_map(sport_key, db_path=self._config.db_path)
             self.apply_injury_adjustments(prediction, injury_map)
+        enrich_prediction_explainability(prediction)
         return self.serialize_prediction_row(prediction)

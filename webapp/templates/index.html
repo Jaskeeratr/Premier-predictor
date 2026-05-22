@@ -9,7 +9,8 @@
 <body>
   <main class="app-shell">
     <section id="demo-banner" class="demo-banner hidden">
-      Running in Demo Mode: live API data is unavailable, using deterministic sample data.
+      <strong>Running in Demo Mode</strong>
+      <span id="demo-banner-detail">Live API data unavailable. Using deterministic sample schedule.</span>
     </section>
 
     <section class="hero">
@@ -109,7 +110,9 @@
               <th>Venue</th>
               <th>Predicted Winner</th>
               <th>Confidence</th>
+              <th>Tier</th>
               <th>Confidence Bar</th>
+              <th>Signals</th>
               <th>Rough Score</th>
               <th>What-If</th>
             </tr>
@@ -190,6 +193,7 @@
         <p>Current training metrics and top feature signals for the selected sport.</p>
       </div>
       <p id="model-meta" class="meta"></p>
+      <div id="model-health-card" class="model-health-card hidden"></div>
       <div class="table-wrap">
         <table>
           <thead>
@@ -357,6 +361,10 @@
         </div>
       </div>
       <div id="team-compare-result" class="compare-grid"></div>
+      <div id="team-radar-wrap" class="team-radar-wrap hidden">
+        <h3>Team Radar Snapshot</h3>
+        <svg id="team-radar" viewBox="0 0 320 320" role="img" aria-label="Team comparison radar chart"></svg>
+      </div>
     </section>
   </main>
 

@@ -1,10 +1,33 @@
+# Python
 .venv/
-__pycache__/
-*.pyc
-webapp/prediction_history.db
-webapp/models/
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
+.coverage
+coverage.xml
+htmlcov/
+__pycache__/
+*.py[cod]
+
+# Local runtime state
+*.db
+*.sqlite
+*.sqlite3
+webapp/models/
+models/
+artifacts/
+
+# Generated outputs
 reports/*.html
 reports/*.csv
-artifacts/
+docs/screenshots/*
+docs/sample_outputs/*
+!docs/screenshots/.gitkeep
+!docs/sample_outputs/.gitkeep
+
+# Frontend/build
+node_modules/
+
+# OS/editor
+.DS_Store
+Thumbs.db

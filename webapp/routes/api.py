@@ -6,7 +6,8 @@ from typing import Any
 
 from flask import Blueprint, current_app, jsonify, request
 
-from webapp.adaptive_model import get_latest_model_summary
+from webapp.adaptive_model import get_latest_model_summary, get_model_health_summary
+from webapp.data_sources import SUPPORTED_SPORTS
 from webapp.errors import AppError, ValidationError
 from webapp.services import HistoryService, InjuryService, PredictionService
 
@@ -67,6 +68,20 @@ def model_summary() -> Any:
     if not summary:
         return jsonify({"status": "not_available", "sport": sport_key})
     return jsonify({"status": "ok", "sport": sport_key, "summary": summary})
+
+
+@api_bp.get("/model-health")
+def model_health() -> Any:
+    sport_key = request.args.get("sport", "football")
+    db_path_value = current_app.config.get("DB_PATH")
+    db_path = Path(db_path_value) if db_path_value else None
+    if sport_key == "all":
+        rows = [get_model_health_summary(key, db_path=db_path) for key in SUPPORTED_SPORTS]
+        return jsonify({"status": "ok", "scope": "all", "rows": rows})
+
+    _prediction_service().validate_sport(sport_key)
+    summary = get_model_health_summary(sport_key, db_path=db_path)
+    return jsonify({"status": "ok", "scope": "single", "sport": sport_key, "summary": summary})
 
 
 @api_bp.get("/upcoming")

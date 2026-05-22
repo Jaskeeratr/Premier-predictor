@@ -48,7 +48,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "npm"
 
       - name: Install frontend build tooling
@@ -64,3 +64,12 @@ jobs:
         with:
           name: frontend-build
           path: artifacts/frontend
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t premier-predictor:ci .

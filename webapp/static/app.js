@@ -9,6 +9,7 @@ const upcomingTableWrap = document.getElementById("upcoming-table-wrap");
 const upcomingCards = document.getElementById("upcoming-cards");
 const upcomingMeta = document.getElementById("upcoming-meta");
 const demoBanner = document.getElementById("demo-banner");
+const demoBannerDetail = document.getElementById("demo-banner-detail");
 
 const historySport = document.getElementById("history-sport");
 const historyLeague = document.getElementById("history-league");
@@ -41,6 +42,7 @@ const clearSportInjuriesBtn = document.getElementById("clear-sport-injuries-btn"
 const modelMeta = document.getElementById("model-meta");
 const modelMetricsBody = document.getElementById("model-metrics-body");
 const featureImportanceWrap = document.getElementById("feature-importance-wrap");
+const modelHealthCard = document.getElementById("model-health-card");
 
 const kpiTotalMatches = document.getElementById("kpi-total-matches");
 const kpiAvgConfidence = document.getElementById("kpi-avg-confidence");
@@ -50,12 +52,41 @@ const compareTeamASelect = document.getElementById("compare-team-a");
 const compareTeamBSelect = document.getElementById("compare-team-b");
 const compareTeamsBtn = document.getElementById("compare-teams-btn");
 const teamCompareResult = document.getElementById("team-compare-result");
+const teamRadarWrap = document.getElementById("team-radar-wrap");
+const teamRadar = document.getElementById("team-radar");
 
 let allUpcomingMatches = [];
 let autoRefreshHandle = null;
 
 function pct(value) {
   return `${(Number(value) * 100).toFixed(1)}%`;
+}
+
+function confidenceTierClass(tier) {
+  const value = String(tier || "").toLowerCase();
+  if (value.includes("strong")) return "tier-strong";
+  if (value.includes("lean")) return "tier-lean";
+  if (value.includes("toss")) return "tier-toss";
+  return "tier-uncertain";
+}
+
+function renderRiskTags(tags) {
+  const rows = Array.isArray(tags) ? tags : [];
+  if (!rows.length) return `<span class="risk-tag risk-neutral">Normal</span>`;
+  return rows
+    .map((tag) => {
+      const text = String(tag);
+      const style =
+        text === "Strong Pick"
+          ? "risk-strong"
+          : text === "Upset Alert"
+            ? "risk-upset"
+            : text === "High Risk"
+              ? "risk-high"
+              : "risk-momentum";
+      return `<span class="risk-tag ${style}">${text}</span>`;
+    })
+    .join("");
 }
 
 function asLocalTimestamp(utcValue) {
@@ -253,9 +284,14 @@ function renderUpcomingCards(matches) {
         <p><strong>${asLocalTimestamp(match.kickoff_utc)}</strong> | ${match.league}</p>
         <p>Venue: ${match.venue || "Unknown Venue"}</p>
         <p class="winner">Winner: ${match.predicted_winner}</p>
-        <p class="confidence">Confidence: ${pct(match.confidence)}</p>
+        <p class="confidence">Confidence: ${pct(match.confidence)} <span class="tier-chip ${confidenceTierClass(match.confidence_tier)}">${match.confidence_tier || "Very Uncertain"}</span></p>
         ${confidenceBar(match.confidence)}
+        <div class="risk-tags">${renderRiskTags(match.risk_indicators)}</div>
         <p>Rough Score: ${match.predicted_score}</p>
+        <p class="explain-line">${match.explanation || ""}</p>
+        <ul class="top-factor-list">
+          ${(match.top_factors || []).slice(0, 3).map((item) => `<li>${item}</li>`).join("")}
+        </ul>
         <p><button type="button" class="use-match-btn" data-event-id="${match.event_id}">Use In What-If</button></p>
       </article>
     `,
@@ -274,13 +310,146 @@ function applyUpcomingViewMode() {
   }
 }
 
+function normalizeToPercent(value, min, max) {
+  if (!Number.isFinite(value) || max <= min) return 0;
+  const clamped = Math.max(min, Math.min(max, value));
+  return ((clamped - min) / (max - min)) * 100;
+}
+
+function extractTeamMetricsFromMatches(team, matches) {
+  const teamMatches = matches.filter((m) => m.home_team === team || m.away_team === team);
+  if (!teamMatches.length) {
+    return null;
+  }
+
+  const ratingValues = [];
+  const formValues = [];
+  const confidenceValues = [];
+  const scoreForValues = [];
+  const scoreAgainstValues = [];
+
+  teamMatches.forEach((m) => {
+    const isHome = m.home_team === team;
+    const factors = m.factors || {};
+    ratingValues.push(Number(isHome ? factors.home_rating : factors.away_rating) || 1500);
+    formValues.push(Number(isHome ? factors.home_form : factors.away_form) || 0.5);
+    confidenceValues.push(Number(m.confidence || 0));
+
+    const parsed = parsePredictedScore(m.predicted_score);
+    if (parsed) {
+      scoreForValues.push(isHome ? parsed.home : parsed.away);
+      scoreAgainstValues.push(isHome ? parsed.away : parsed.home);
+    }
+  });
+
+  const avg = (arr, fallback = 0) =>
+    arr.length ? arr.reduce((sum, item) => sum + item, 0) / arr.length : fallback;
+
+  const rating = avg(ratingValues, 1500);
+  const form = avg(formValues, 0.5);
+  const confidence = avg(confidenceValues, 0.5);
+  const attack = avg(scoreForValues, 0);
+  const defense = avg(scoreAgainstValues, 0);
+  const momentum = (form - 0.5) * 2;
+
+  return {
+    rating,
+    form,
+    confidence,
+    attack,
+    defense,
+    momentum,
+    upcoming_count: teamMatches.length,
+    predicted_wins: teamMatches.filter((m) => m.predicted_winner === team).length,
+    next_match:
+      teamMatches
+        .map((m) => ({ ...m, kickoffTs: Date.parse(m.kickoff_utc) || Number.MAX_SAFE_INTEGER }))
+        .sort((a, b) => a.kickoffTs - b.kickoffTs)[0] || null,
+  };
+}
+
+function polygonPoints(values, centerX, centerY, radius) {
+  const count = values.length;
+  const points = values.map((v, idx) => {
+    const angle = -Math.PI / 2 + (idx * 2 * Math.PI) / count;
+    const scaled = Math.max(0, Math.min(1, Number(v)));
+    const x = centerX + Math.cos(angle) * radius * scaled;
+    const y = centerY + Math.sin(angle) * radius * scaled;
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  });
+  return points.join(" ");
+}
+
+function renderTeamRadar(teamA, teamB, metricA, metricB) {
+  if (!metricA || !metricB) {
+    teamRadarWrap.classList.add("hidden");
+    teamRadar.innerHTML = "";
+    return;
+  }
+
+  const axes = [
+    { label: "Rating", a: normalizeToPercent(metricA.rating, 1350, 1750), b: normalizeToPercent(metricB.rating, 1350, 1750) },
+    { label: "Form", a: normalizeToPercent(metricA.form, 0.2, 0.85), b: normalizeToPercent(metricB.form, 0.2, 0.85) },
+    { label: "Attack", a: normalizeToPercent(metricA.attack, 0, 220), b: normalizeToPercent(metricB.attack, 0, 220) },
+    { label: "Defense", a: normalizeToPercent(220 - metricA.defense, 0, 220), b: normalizeToPercent(220 - metricB.defense, 0, 220) },
+    { label: "Momentum", a: normalizeToPercent(metricA.momentum, -1, 1), b: normalizeToPercent(metricB.momentum, -1, 1) },
+    { label: "Model Edge", a: normalizeToPercent(metricA.confidence, 0.35, 0.85), b: normalizeToPercent(metricB.confidence, 0.35, 0.85) },
+  ];
+
+  const centerX = 160;
+  const centerY = 160;
+  const radius = 110;
+
+  const rings = [0.25, 0.5, 0.75, 1.0].map((ratio) => {
+    const points = polygonPoints(axes.map(() => ratio), centerX, centerY, radius);
+    return `<polygon class="radar-ring" points="${points}" />`;
+  });
+
+  const axisLines = axes
+    .map((_, idx) => {
+      const angle = -Math.PI / 2 + (idx * 2 * Math.PI) / axes.length;
+      const x = centerX + Math.cos(angle) * radius;
+      const y = centerY + Math.sin(angle) * radius;
+      return `<line class="radar-axis" x1="${centerX}" y1="${centerY}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" />`;
+    })
+    .join("");
+
+  const labels = axes
+    .map((axis, idx) => {
+      const angle = -Math.PI / 2 + (idx * 2 * Math.PI) / axes.length;
+      const x = centerX + Math.cos(angle) * (radius + 20);
+      const y = centerY + Math.sin(angle) * (radius + 20);
+      return `<text class="radar-label" x="${x.toFixed(1)}" y="${y.toFixed(1)}">${axis.label}</text>`;
+    })
+    .join("");
+
+  const valuesA = axes.map((axis) => axis.a / 100);
+  const valuesB = axes.map((axis) => axis.b / 100);
+
+  teamRadarWrap.classList.remove("hidden");
+  teamRadar.innerHTML = `
+    <g>${rings.join("")}</g>
+    <g>${axisLines}</g>
+    <polygon class="radar-shape radar-a" points="${polygonPoints(valuesA, centerX, centerY, radius)}"></polygon>
+    <polygon class="radar-shape radar-b" points="${polygonPoints(valuesB, centerX, centerY, radius)}"></polygon>
+    <g>${labels}</g>
+    <g class="radar-legend">
+      <rect x="18" y="14" width="11" height="11" class="radar-a"></rect>
+      <text x="34" y="24">${teamA}</text>
+      <rect x="18" y="32" width="11" height="11" class="radar-b"></rect>
+      <text x="34" y="42">${teamB}</text>
+    </g>
+  `;
+}
+
 function renderUpcomingMatches() {
   const matches = filterUpcomingMatches();
   if (!matches.length) {
-    upcomingBody.innerHTML = `<tr><td colspan="9">No matches match the current filters.</td></tr>`;
+    upcomingBody.innerHTML = `<tr><td colspan="11">No matches match the current filters.</td></tr>`;
     renderUpcomingCards([]);
     updateTeamComparisonOptions([]);
     teamCompareResult.innerHTML = `<div class="history-empty">No teams available for comparison with current filters.</div>`;
+    renderTeamRadar("", "", null, null);
     applyUpcomingViewMode();
     return;
   }
@@ -293,7 +462,9 @@ function renderUpcomingMatches() {
         <td>${match.venue || "Unknown Venue"}</td>
         <td class="winner">${match.predicted_winner}</td>
         <td class="confidence">${pct(match.confidence)}</td>
+        <td><span class="tier-chip ${confidenceTierClass(match.confidence_tier)}">${match.confidence_tier || "Very Uncertain"}</span></td>
         <td>${confidenceBar(match.confidence)}</td>
+        <td><div class="risk-tags">${renderRiskTags(match.risk_indicators)}</div></td>
         <td>${match.predicted_score}</td>
         <td><button type="button" class="use-match-btn" data-event-id="${match.event_id}">Use</button></td>
       </tr>
@@ -330,45 +501,38 @@ function compareTeamsFromCurrentData() {
     return;
   }
 
-  const relevant = allUpcomingMatches.filter(
-    (m) => m.home_team === teamA || m.away_team === teamA || m.home_team === teamB || m.away_team === teamB,
-  );
-  const summarize = (team) => {
-    const teamMatches = relevant.filter((m) => m.home_team === team || m.away_team === team);
-    const avgConfidence =
-      teamMatches.length > 0
-        ? teamMatches.reduce((acc, row) => acc + Number(row.confidence || 0), 0) / teamMatches.length
-        : 0;
-    const predictedWins = teamMatches.filter((m) => m.predicted_winner === team).length;
-    return {
-      matchCount: teamMatches.length,
-      predictedWins,
-      avgConfidence,
-      nextGame:
-        teamMatches
-          .map((m) => ({ ...m, kickoffTs: Date.parse(m.kickoff_utc) || Number.MAX_SAFE_INTEGER }))
-          .sort((a, b) => a.kickoffTs - b.kickoffTs)[0] || null,
-    };
-  };
+  const relevant = allUpcomingMatches.filter((m) => {
+    return m.home_team === teamA || m.away_team === teamA || m.home_team === teamB || m.away_team === teamB;
+  });
+  const a = extractTeamMetricsFromMatches(teamA, relevant);
+  const b = extractTeamMetricsFromMatches(teamB, relevant);
+  if (!a || !b) {
+    teamCompareResult.innerHTML = `<div class="history-empty">Not enough comparable matches for selected teams.</div>`;
+    renderTeamRadar("", "", null, null);
+    return;
+  }
 
-  const a = summarize(teamA);
-  const b = summarize(teamB);
   teamCompareResult.innerHTML = `
     <article class="compare-card">
       <h4>${teamA}</h4>
-      <div class="compare-row"><span>Upcoming Matches</span><strong>${a.matchCount}</strong></div>
-      <div class="compare-row"><span>Predicted Wins</span><strong>${a.predictedWins}</strong></div>
-      <div class="compare-row"><span>Avg Confidence</span><strong>${pct(a.avgConfidence)}</strong></div>
-      <div class="compare-row"><span>Next Match</span><strong>${a.nextGame ? `${a.nextGame.home_team} vs ${a.nextGame.away_team}` : "-"}</strong></div>
+      <div class="compare-row"><span>Upcoming Matches</span><strong>${a.upcoming_count}</strong></div>
+      <div class="compare-row"><span>Predicted Wins</span><strong>${a.predicted_wins}</strong></div>
+      <div class="compare-row"><span>Avg Confidence</span><strong>${pct(a.confidence)}</strong></div>
+      <div class="compare-row"><span>Form</span><strong>${a.form.toFixed(2)}</strong></div>
+      <div class="compare-row"><span>Rating</span><strong>${a.rating.toFixed(0)}</strong></div>
+      <div class="compare-row"><span>Next Match</span><strong>${a.next_match ? `${a.next_match.home_team} vs ${a.next_match.away_team}` : "-"}</strong></div>
     </article>
     <article class="compare-card">
       <h4>${teamB}</h4>
-      <div class="compare-row"><span>Upcoming Matches</span><strong>${b.matchCount}</strong></div>
-      <div class="compare-row"><span>Predicted Wins</span><strong>${b.predictedWins}</strong></div>
-      <div class="compare-row"><span>Avg Confidence</span><strong>${pct(b.avgConfidence)}</strong></div>
-      <div class="compare-row"><span>Next Match</span><strong>${b.nextGame ? `${b.nextGame.home_team} vs ${b.nextGame.away_team}` : "-"}</strong></div>
+      <div class="compare-row"><span>Upcoming Matches</span><strong>${b.upcoming_count}</strong></div>
+      <div class="compare-row"><span>Predicted Wins</span><strong>${b.predicted_wins}</strong></div>
+      <div class="compare-row"><span>Avg Confidence</span><strong>${pct(b.confidence)}</strong></div>
+      <div class="compare-row"><span>Form</span><strong>${b.form.toFixed(2)}</strong></div>
+      <div class="compare-row"><span>Rating</span><strong>${b.rating.toFixed(0)}</strong></div>
+      <div class="compare-row"><span>Next Match</span><strong>${b.next_match ? `${b.next_match.home_team} vs ${b.next_match.away_team}` : "-"}</strong></div>
     </article>
   `;
+  renderTeamRadar(teamA, teamB, a, b);
 }
 
 function renderModelSummary(payload) {
@@ -406,6 +570,57 @@ function renderModelSummary(payload) {
     `,
     )
     .join("");
+}
+
+function renderModelHealth(payload) {
+  if (!payload || payload.status !== "ok" || !payload.summary) {
+    modelHealthCard.classList.add("hidden");
+    modelHealthCard.innerHTML = "";
+    return;
+  }
+  const summary = payload.summary;
+  const statusClass =
+    summary.status === "Healthy"
+      ? "health-healthy"
+      : summary.status === "Needs More Data"
+        ? "health-needs-data"
+        : summary.status === "Undertrained"
+          ? "health-undertrained"
+          : "health-low-confidence";
+
+  modelHealthCard.classList.remove("hidden");
+  modelHealthCard.innerHTML = `
+    <div class="health-head">
+      <span class="health-pill ${statusClass}">${summary.status}</span>
+      <strong>${summary.active_model || "-"}</strong>
+      <span>Version ${summary.version || "-"}</span>
+    </div>
+    <p>${summary.reason || ""}</p>
+    <div class="health-grid">
+      <div><span>Samples</span><strong>${summary.sample_count || 0}</strong></div>
+      <div><span>Required Min</span><strong>${summary.required_min_samples || 0}</strong></div>
+      <div><span>CV Accuracy</span><strong>${pct(summary.metrics?.cv_accuracy || 0)}</strong></div>
+      <div><span>CV ECE</span><strong>${Number(summary.metrics?.cv_ece || 0).toFixed(4)}</strong></div>
+      <div><span>Brier</span><strong>${Number(summary.metrics?.cv_brier || 0).toFixed(4)}</strong></div>
+      <div><span>Last Trained</span><strong>${summary.last_trained_at_utc ? asLocalTimestamp(summary.last_trained_at_utc) : "-"}</strong></div>
+    </div>
+  `;
+}
+
+async function loadModelHealth({ silent = false } = {}) {
+  try {
+    const sport = sportSelect.value;
+    const response = await fetch(`/api/model-health?sport=${encodeURIComponent(sport)}`);
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Failed to load model health.");
+    renderModelHealth(payload);
+    if (!silent && payload.summary?.status) {
+      setModelMeta(`Model summary loaded for ${sport.replace("_", " ")}. Health: ${payload.summary.status}.`);
+    }
+  } catch (error) {
+    if (!silent) setModelMeta(error.message);
+    renderModelHealth(null);
+  }
 }
 
 async function loadModelSummary({ silent = false } = {}) {
@@ -447,8 +662,12 @@ async function loadUpcomingMatches({ force = false, silent = false } = {}) {
 
     if (payload.demo_mode) {
       demoBanner.classList.remove("hidden");
+      const reason = payload.data_source_reason || "live feed unavailable";
+      const provider = payload.data_provider || "demo_generator";
+      demoBannerDetail.textContent = `Reason: ${reason}. Provider: ${provider}. Fallback: deterministic sample schedule.`;
     } else {
       demoBanner.classList.add("hidden");
+      demoBannerDetail.textContent = "";
     }
 
     const filteredCount = filterUpcomingMatches().length;
@@ -471,9 +690,10 @@ async function loadUpcomingMatches({ force = false, silent = false } = {}) {
     await loadHistory({ silent: true });
     await loadInjuries({ silent: true });
     await loadModelSummary({ silent: true });
+    await loadModelHealth({ silent: true });
   } catch (error) {
     setUpcomingMeta(error.message);
-    upcomingBody.innerHTML = `<tr><td colspan="9">${error.message}</td></tr>`;
+    upcomingBody.innerHTML = `<tr><td colspan="11">${error.message}</td></tr>`;
   } finally {
     if (!silent) {
       loadMatchesBtn.disabled = false;
@@ -569,11 +789,14 @@ function renderWhatIfResult(result) {
     <div class="result-row">
       <div><strong>Winner:</strong> ${result.predicted_winner}</div>
       <div><strong>Confidence:</strong> ${pct(confidence)} (${interpretation})</div>
+      <div><strong>Tier:</strong> <span class="tier-chip ${confidenceTierClass(result.confidence_tier)}">${result.confidence_tier || "Very Uncertain"}</span></div>
       <div><strong>Rough Score:</strong> ${result.predicted_score}</div>
       <div><strong>Home Win:</strong> ${pct(result.home_win_probability)}</div>
       <div><strong>Draw:</strong> ${pct(result.draw_probability)}</div>
       <div><strong>Away Win:</strong> ${pct(result.away_win_probability)}</div>
     </div>
+    <div class="risk-tags">${renderRiskTags(result.risk_indicators)}</div>
+    <p class="explain-line">${result.explanation || ""}</p>
   `;
 }
 
@@ -767,4 +990,5 @@ loadUpcomingMatches({ force: true });
 loadHistory({ silent: false });
 loadInjuries({ silent: false });
 loadModelSummary({ silent: false });
+loadModelHealth({ silent: false });
 applyUpcomingViewMode();

@@ -41,3 +41,22 @@ def test_what_if_api_returns_probabilities(client):
     assert payload["predicted_winner"] in {"Alpha FC", "Beta FC", "Draw"}
     total = payload["home_win_probability"] + payload["draw_probability"] + payload["away_win_probability"]
     assert abs(total - 1.0) < 0.01
+    assert payload["confidence_tier"] in {"Strong Pick", "Lean", "Toss-up", "Very Uncertain"}
+    assert isinstance(payload["risk_indicators"], list)
+    assert isinstance(payload["explanation"], str)
+
+
+def test_model_health_endpoint(client):
+    response = client.get("/api/model-health?sport=football")
+    assert response.status_code == 200
+    payload = response.get_json()
+    assert payload["status"] == "ok"
+    assert payload["scope"] == "single"
+    assert payload["sport"] == "football"
+    assert "summary" in payload
+    assert payload["summary"]["status"] in {
+        "Healthy",
+        "Needs More Data",
+        "Undertrained",
+        "Low Confidence",
+    }

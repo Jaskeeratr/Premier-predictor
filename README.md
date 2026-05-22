@@ -33,9 +33,11 @@ It combines:
 
 - Multi-sport dashboard with league/team filtering.
 - Winner + confidence + rough score predictions.
+- Deterministic explainability: confidence tiers, risk indicators, and top-factor narratives.
 - Adaptive per-sport model retraining and artifact versioning.
 - Cross-validation, log loss, Brier score, and calibration (ECE) tracking.
 - Model summary endpoint with top feature signals.
+- Model health endpoint with production-style status (`Healthy`, `Needs More Data`, `Undertrained`, `Low Confidence`).
 - Injury adjustment workflow (rating/form/offense/defense deltas).
 - What-if simulation with optional injury override.
 - Prediction history snapshots and charting.
@@ -122,6 +124,7 @@ Add screenshots under `docs/screenshots/` and update these links:
 - Dashboard home: `docs/screenshots/dashboard-home.png`
 - Demo mode banner: `docs/screenshots/demo-mode.png`
 - Model summary panel: `docs/screenshots/model-summary.png`
+- Model health card: `docs/screenshots/model-health.png`
 - What-if simulator: `docs/screenshots/what-if.png`
 
 ## 8) Local Setup
@@ -177,6 +180,8 @@ Automatic demo mode:
 - `GET /api/sports`
 - `GET /api/upcoming?sport=football&force=1`
 - `GET /api/model-summary?sport=football`
+- `GET /api/model-health?sport=football`
+- `GET /api/model-health?sport=all`
 - `POST /api/what-if`
 - `GET /api/history`
 - `DELETE /api/history`
@@ -188,6 +193,8 @@ Automatic demo mode:
 
 - `sample_data/`: non-production sample CSVs.
 - `reports/`: generated outputs (CSV/HTML/metrics).
+- `docs/screenshots/`: recruiter-facing dashboard screenshots.
+- `docs/sample_outputs/`: demo CSV/JSON outputs for portfolio walkthroughs.
 - `experiments/`: non-core analysis utilities.
 - `webapp/models/`: persisted model artifacts.
 
@@ -205,4 +212,3 @@ Automatic demo mode:
 - Richer charting and model diagnostics in dashboard.
 - Optional authentication and role-based write actions for injury/history admin flows.
 - Scheduled retraining jobs and artifact retention policies.
-
